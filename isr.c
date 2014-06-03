@@ -18,18 +18,12 @@ void isr_handler(registers_t regs)
   if(regs.int_no == 13)
     {
       terminal_writestring("General Protection Fault. Code: ");
-      //     char buff[100];
-      //itos(regs.err_code, buff, 100);
-      //terminal_writestring(buff);
       terminal_write_dec(regs.err_code);
       halt();
     }
+  
   terminal_writestring("Received interrupt: ");
-    //  terminal_write_dec(regs.int_no);
   terminal_write_dec(regs.int_no);
-  //  char buff[100];
-  //  itos(regs.err_code, buff, 100);
-  //  terminal_writestring(buff);
   terminal_writestring("\n");
       
 }
@@ -38,9 +32,9 @@ void isr_handler(registers_t regs)
 void irq_handler(registers_t regs)
 {
 
-  terminal_writestring("Received IRQ: ");
-  terminal_write_dec(regs.int_no);
-  terminal_writestring("\n");
+  //terminal_writestring("Received IRQ: ");
+  //terminal_write_dec(regs.int_no);
+  //terminal_writestring("\n");
 
   //If int_no >= 40, we must reset the slave as well as the master
   if(regs.int_no >= 40)

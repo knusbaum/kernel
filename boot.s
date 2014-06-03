@@ -56,6 +56,7 @@ _start:
 	# We are now ready to actually execute C code. We cannot embed that in an
 	# assembly file, so we'll create a kernel.c file in a moment. In that file,
 	# we'll create a C entry point called kernel_main and call it here.
+	sti
 	call kernel_main
 
 	# In case the function returns, we'll want to put the computer into an
