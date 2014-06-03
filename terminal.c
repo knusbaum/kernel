@@ -28,14 +28,18 @@ size_t strlen(const char* str)
   return ret;
 }
 
-void itos(uint16_t myint, char buffer[])
+char * itos(uint32_t myint, char buffer[], int bufflen)
 {
-  while(myint > 0)
+  int i = bufflen - 2;
+  buffer[bufflen-1] = 0;
+  
+  while(myint > 0 && i >= 0)
     {
-      *buffer++ = (myint % 10) + '0';
+      buffer[i--] = (myint % 10) + '0';
       myint/=10;
     }
-  *buffer=0;
+  
+  return &buffer[i+1];
 }
  
 void terminal_initialize()
@@ -111,7 +115,6 @@ void terminal_newline()
     {
       terminal_scroll();
       terminal_row--;
-      //      terminal_row = 0;
     }
   move_cursor(terminal_column, terminal_row);
 }
@@ -137,4 +140,11 @@ void terminal_writestring(const char* data)
     {
       terminal_putchar(data[i]);
     }
+}
+
+void terminal_write_dec(uint32_t d)
+{
+  char buff[13];
+  char *x = itos(d, buff, 13);
+  terminal_writestring(x);
 }

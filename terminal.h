@@ -1,3 +1,8 @@
+#ifndef TERMINAL_H
+#define TERMINAL_H
+
+#include <stddef.h>
+
 /* Hardware text mode color constants. */
 enum vga_color
   {
@@ -22,7 +27,7 @@ enum vga_color
 uint8_t make_color(enum vga_color fg, enum vga_color bg); 
 uint16_t make_vgaentry(char c, uint8_t color);
 size_t strlen(const char* str);
-void itos(uint16_t myint, char buffer[]);
+char * itos(uint32_t myint, char buffer[], int bufflen);
  
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;
@@ -41,3 +46,6 @@ void terminal_newline();
 
 void terminal_putchar(char c);
 void terminal_writestring(const char* data);
+void terminal_write_dec(uint32_t d);
+
+#endif

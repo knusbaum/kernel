@@ -22,7 +22,7 @@
 # then allocating 16384 bytes for it, and finally creating a symbol at the top.
 .section .bootstrap_stack, "aw", @nobits
 stack_bottom:
-.skip 16384 		#16 KiB
+.skip 32768 		#32 KiB
 stack_top:
 	
 .section .text
@@ -64,6 +64,8 @@ _start:
 	# the next interrupt arrives, and jumping to the halt instruction if it ever
 	# continues execution, just to be safe. We will create a local label rather
 	# than real symbol and jump to there endlessly.
+.global halt
+halt:	
 	cli
 	hlt
 .Lhang:

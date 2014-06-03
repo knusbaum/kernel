@@ -2,9 +2,6 @@
 .global outb
 .global inb
 .global inw
-.global call_putchar
-	
-.extern terminal_putchar
 	
 .type outb, @function
 	# void outb(uint16_t port, uint8_t value)
@@ -17,13 +14,6 @@ outb:
 	ret
 
 .size outb, . - outb
-
-call_putchar:
-	pushl	'c'
-	call	terminal_putchar
-	addl	$4, %esp
-	
-	ret
 	
 .type inb, @function
 	# uint8_t inb(uint16_t port)

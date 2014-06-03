@@ -4,6 +4,10 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "terminal.h"
+#include "gdt.h"
+#include "idt.h"
+#include "pit.h"
+#include "pic.h"
 //#include "port.h"
  
 /* Check if the compiler thinks if we are targeting the wrong operating system. */
@@ -21,47 +25,32 @@
 extern "C" /* Use C linkage for kernel_main. */
 #endif
 
-/*
-void outb(uint16_t port, uint8_t value)
-{
-  asm volatile ("outb %1, %0" : : "dN" (port), "a" (value));
-}
 
-uint8_t inb(uint16_t port)
-{
-  uint8_t ret;
-  asm volatile("inb %1, %0" : "=a" (ret) : "dN" (port));
-  return ret;
-}
-
-uint16_t inw(uint16_t port)
-{
-  uint16_t ret;
-  asm volatile ("inw %1, %0" : "=a" (ret) : "dN" (port));
-  return ret;
-} 
-/**/
 
 void kernel_main()
 {
-  //char *letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ\n";
   terminal_initialize();
-  /* Since there is no support for newlines in terminal_putchar yet, \n will
-     produce some VGA specific character instead. This is normal. */
-  //  move_cursor(10,10);
-  //terminal_putchar('c');
-  //  call_putchar();
-  //  move_cursor(10,10);
+  init_gdt();
+  
+  remap_pic();
+  init_idt();
+  
+  init_timer(65535);
+
   terminal_writestring("Hello, kernel World!\nHello, Again!\n");
   //terminal_setcolor(make_color(COLOR_RED, COLOR_BLUE));
   terminal_writestring("Right now I don't do much. Soon I'll have a few things to do.\n");
-  for(int i = 0; i < 100; i++)
-    {
-      //      terminal_writestring(&letters[i % 5]);
-    }
-  char x[10];
-  itos(1234, x);
-  terminal_writestring(x);
-  terminal_writestring("\n\n\n");
-  terminal_writestring("hello another time\n");
+  
+  
+  asm volatile ("int $0x3");
+  asm volatile ("int $0x4");
+  //  asm volatile ("int $32");
+
+  int i = 0;
+  while(1){
+    i++;
+    //    terminal_write_dec(i);
+  }
+  terminal_write_dec(i);
+
 }
