@@ -10,19 +10,24 @@
 #define PIT_DATA2 0x42
 #define PIT_COMMAND 0x43
 
-long long tick = 0;
+#define MODULO 100
 
+long long tick = 0;
+uint8_t modcount = 0;
 char *x = "ABCDEFGHIJKLM";
 
 static void timer_callback(registers_t regs)
 {
-  
-  tick++;
-  //  terminal_writestring("Tick: ");
-  terminal_write_dec(tick);
-  //  terminal_writestring("\n");
-  //terminal_putchar(x[tick % 13]);
-  terminal_putchar('\n');
+    modcount = (modcount + 1) % MODULO;
+    if(modcount == 0)
+    {
+        tick++;
+        //  terminal_writestring("Tick: ");
+        terminal_write_dec(tick);
+        //  terminal_writestring("\n");
+        //terminal_putchar(x[tick % 13]);
+        terminal_putchar('\n');
+    }
 }
 
 void init_timer(uint32_t frequency)

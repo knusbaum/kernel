@@ -35,7 +35,7 @@ void kernel_main()
   remap_pic();
   init_idt();
   
-  init_timer(65536);
+  init_timer(100);
 
   terminal_writestring("Hello, kernel World!\nHello, Again!\n");
   //terminal_setcolor(make_color(COLOR_RED, COLOR_BLUE));
