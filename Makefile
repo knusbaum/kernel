@@ -18,10 +18,14 @@ OBJECTS=terminal.o \
 
 all: $(KERNEL_IMG)
 
+run: $(KERNEL_IMG)
+	sudo cp $(KERNEL_IMG) /boot/
+	sudo init 6
+
 clean: 
 	-@rm *.o *~
 
-kernel.o : kernel.c terminal.h
+kernel.o : kernel.c terminal.h gdt.h idt.h pit.h pic.h
 	$(CC) -ggdb -m32 -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 boot.o : boot.s
@@ -44,7 +48,7 @@ $(KERNEL_IMG) : $(OBJECTS) linker.ld
 gdt_asm.o : gdt_asm.s
 	$(AS) --32 -ggdb gdt_asm.s -o gdt_asm.o
 
-gdt.o : gdt.c gdt.h
+gdt.o : gdt.c gdt.h terminal.h
 	$(CC) -m32 -ggdb -c gdt.c -o gdt.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 
@@ -52,7 +56,7 @@ gdt.o : gdt.c gdt.h
 idt_asm.o : idt_asm.s
 	$(AS) --32 -ggdb idt_asm.s -o idt_asm.o
 
-idt.o : idt.c idt.h
+idt.o : idt.c idt.h common.h terminal.h
 	$(CC) -m32 -ggdb -c idt.c -o idt.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 
@@ -60,11 +64,11 @@ common.o : common.c common.h
 	$(CC) -m32 -ggdb -c common.c -o common.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 
-isr.o : isr.c isr.h
+isr.o : isr.c isr.h terminal.h pic.h port.h
 	$(CC) -m32 -ggdb -c isr.c -o isr.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
-pic.o : pic.c pic.h
+pic.o : pic.c pic.h port.h terminal.h
 	$(CC) -m32 -ggdb -c pic.c -o pic.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
-pit.o : pit.c pit.h
+pit.o : pit.c pit.h isr.h port.h terminal.h
 	$(CC) -m32 -ggdb -c pit.c -o pit.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra

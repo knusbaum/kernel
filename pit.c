@@ -10,14 +10,19 @@
 #define PIT_DATA2 0x42
 #define PIT_COMMAND 0x43
 
-uint32_t tick = 0;
+long long tick = 0;
+
+char *x = "ABCDEFGHIJKLM";
 
 static void timer_callback(registers_t regs)
 {
+  
   tick++;
-  terminal_writestring("Tick: ");
+  //  terminal_writestring("Tick: ");
   terminal_write_dec(tick);
-  terminal_writestring("\n");
+  //  terminal_writestring("\n");
+  //terminal_putchar(x[tick % 13]);
+  terminal_putchar('\n');
 }
 
 void init_timer(uint32_t frequency)
@@ -28,7 +33,11 @@ void init_timer(uint32_t frequency)
   register_interrupt_handler(IRQ0, &timer_callback);
   
   //  uint32_t divisor = PIT_NATURAL_FREQ / frequency;
-  uint32_t divisor = 1193180 / frequency;
+  uint32_t divisor;
+  if(frequency)
+    divisor = 1193180 / frequency;
+  else
+    divisor = 0;
   /*
   http://wiki.osdev.org/Programmable_Interval_Timer#I.2FO_Ports
     

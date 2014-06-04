@@ -104,7 +104,7 @@ void terminal_advance()
     }
   else
     {
-      move_cursor(terminal_column, terminal_row);
+      //      move_cursor(terminal_column, terminal_row);
     }
 }
 
@@ -113,10 +113,11 @@ void terminal_newline()
   terminal_column = 0;
   if (++terminal_row == VGA_HEIGHT)
     {
-      terminal_scroll();
-      terminal_row--;
+      //      terminal_scroll();
+      // terminal_row--;
+      terminal_row = 0;
     }
-  move_cursor(terminal_column, terminal_row);
+  //  move_cursor(terminal_column, terminal_row);
 }
  
 void terminal_putchar(char c)
