@@ -18,6 +18,7 @@ char *x = "ABCDEFGHIJKLM";
 
 static void timer_callback(registers_t regs)
 {
+    (void)regs;
     modcount = (modcount + 1) % MODULO;
     if(modcount == 0)
     {
