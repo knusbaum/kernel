@@ -2,6 +2,7 @@
 #define TERMINAL_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 /* Hardware text mode color constants. */
 enum vga_color
@@ -37,5 +38,6 @@ void terminal_setcolor(uint8_t color);
 void terminal_putchar(char c);
 void terminal_writestring(const char* data);
 void terminal_write_dec(uint32_t d);
+void clear_screen(void);
 
 #endif

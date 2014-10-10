@@ -79,7 +79,7 @@ static void terminal_putentryat(char c, uint8_t color, size_t x, size_t y)
   terminal_buffer[index] = make_vgaentry(c, color);
 }
 
-static void move_cursor(uint8_t xpos, uint8_t ypos)
+void move_cursor(uint8_t xpos, uint8_t ypos)
 {
   uint16_t location = ypos * VGA_WIDTH + xpos;
 
@@ -120,14 +120,14 @@ static void terminal_advance()
 
 static void terminal_newline()
 {
-  terminal_column = 0;
-  if (++terminal_row == VGA_HEIGHT)
+    terminal_column = 0;
+    if (++terminal_row == VGA_HEIGHT)
     {
-            terminal_scroll();
-      terminal_row--;
-      //terminal_row = 0;
+        terminal_scroll();
+        terminal_row--;
+        //terminal_row = 0;
     }
-  //  move_cursor(terminal_column, terminal_row);
+    //  move_cursor(terminal_column, terminal_row);
 }
  
 void terminal_putchar(char c)
@@ -158,4 +158,14 @@ void terminal_write_dec(uint32_t d)
   char buff[13];
   char *x = itos(d, buff, 13);
   terminal_writestring(x);
+}
+
+void clear_screen(void)
+{
+    uint16_t blank = make_vgaentry(' ', terminal_color);
+    //Move the lines up
+    for(unsigned int i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++)
+    {
+        terminal_buffer[i] = blank;
+    }
 }

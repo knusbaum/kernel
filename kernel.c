@@ -8,6 +8,8 @@
 #include "idt.h"
 #include "pit.h"
 #include "pic.h"
+#include "common.h"
+#include "paging.h"
 //#include "port.h"
  
 /* Check if the compiler thinks if we are targeting the wrong operating system. */
@@ -46,7 +48,18 @@ void kernel_main()
   asm volatile ("int $0x4");
   //  asm volatile ("int $32");
 
-  int i = 0;
+//  panic("KERNEL PANIC TEST!\n\n");
+//  terminal_writestring("done panic.\n");
+
+  initialize_paging();
+  terminal_writestring("Paging initialized.\n");
+
+  terminal_writestring("\nCausing page fault.\n");
+  uint32_t *ptr = (uint32_t*)0xA0000000;
+  uint32_t do_page_fault = *ptr;
+
+
+  int i = do_page_fault;
   while(1){
     i++;
     //    terminal_write_dec(i);

@@ -19,7 +19,7 @@ void isr_handler(registers_t regs)
     {
         terminal_writestring("General Protection Fault. Code: ");
         terminal_write_dec(regs.err_code);
-        halt();
+//        halt();
     }
     else if(regs.int_no == 14)
     {

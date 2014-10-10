@@ -18,7 +18,9 @@ OBJECTS=terminal.o \
 	isr.o \
 	pic.o \
 	pit.o \
-	kheap.o
+	kheap.o \
+	frame.o \
+	paging.o
 
 
 all: $(KERNEL_IMG)
@@ -41,9 +43,11 @@ $(KERNEL_IMG) : $(OBJECTS) linker.ld
 
 %.o : %.c
 	@$(CC) $(CFLAGS) -o $@ -c $<
-	@$(CC) -MM $(CFLAGS) -c $< > $*.dG
+	@$(CC) -MM $(CFLAGS) -c $< > $*.d
 	-@echo -e [CC] '\t' $@
 
 %.o : %.s
 	@$(AS) $(ASFLAGS) $< -o $@
 	-@echo -e [AS] '\t' $@
+
+-include $(OBJECTS:.o=.d)
