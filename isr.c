@@ -14,47 +14,14 @@ void register_interrupt_handler(uint8_t interrupt, isr_handler_t handler)
 }
 
 void isr_handler(registers_t regs)
-{
-    if(regs.int_no == 13)
+{ 
+//    terminal_writestring("Received interrupt: ");
+//    terminal_write_dec(regs.int_no);
+//    terminal_writestring("\n");
+    if(interrupt_handlers[regs.int_no])
     {
-        terminal_writestring("General Protection Fault. Code: ");
-        terminal_write_dec(regs.err_code);
-//        halt();
+        interrupt_handlers[regs.int_no](regs);
     }
-    else if(regs.int_no == 14)
-    {
-        terminal_writestring("Page Fault.\n");
-        if( !(regs.err_code && 0x01)){
-            terminal_writestring("    Page not present.\n");
-        }
-        
-        if(regs.err_code && 0x02){
-            terminal_writestring("    Write Error.\n");
-        }
-        else {
-            terminal_writestring("    Read Error.\n");
-        }
-        
-        if(regs.err_code && 0x04){
-            terminal_writestring("    User Mode.\n");
-        }
-        else {
-            terminal_writestring("    Kernel Mode.\n");
-        }
-
-        if(regs.err_code && 0x08){
-            terminal_writestring("    Reserved bits overwritten.\n");
-        }
-        
-        if(regs.err_code && 0x10){
-            terminal_writestring("    Fault during instruction fetch.\n");
-        }
-    }
-  
-    terminal_writestring("Received interrupt: ");
-    terminal_write_dec(regs.int_no);
-    terminal_writestring("\n");
-      
 }
 
 

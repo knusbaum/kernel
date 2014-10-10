@@ -27,7 +27,17 @@
 extern "C" /* Use C linkage for kernel_main. */
 #endif
 
+void general_protection(registers_t regs) {
+    terminal_writestring("General Protection Fault. Code: ");
+    terminal_write_dec(regs.err_code);
+    panic("Halting.\n");
+}
 
+void invalid_opcode(registers_t regs){
+    terminal_writestring("Invalid Opcode. Code: ");
+    terminal_write_dec(regs.err_code);
+    panic("Halting.\n");
+}
 
 void kernel_main()
 {
@@ -36,7 +46,10 @@ void kernel_main()
   
   remap_pic();
   init_idt();
-  
+
+  register_interrupt_handler(13, general_protection);
+  register_interrupt_handler(6, general_protection);
+
   init_timer(100);
 
   terminal_writestring("Hello, kernel World!\nHello, Again!\n");
@@ -60,6 +73,7 @@ void kernel_main()
 
 
   int i = do_page_fault;
+//  int i = 0;
   while(1){
     i++;
     //    terminal_write_dec(i);

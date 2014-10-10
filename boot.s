@@ -68,7 +68,8 @@ _start:
 .global halt
 halt:	
 	cli
-	hlt
+        jmp halt
+	
 .Lhang:
 	jmp .Lhang
 	
