@@ -24,6 +24,8 @@ void initialize_paging()
     memset(kernel_directory, 0, sizeof(page_directory_t));
     current_directory = kernel_directory;
 
+
+
     // Going to identity map from 0x0 to the end of used memory.
     uint32_t i = 0;
     while(i < placement_address)
@@ -32,9 +34,12 @@ void initialize_paging()
         i += 0x1000;
     }
 
+
+
     register_interrupt_handler(14, page_fault);
-    
+
     switch_page_directory(kernel_directory);
+    
 }
 
 void switch_page_directory(page_directory_t *dir)
@@ -43,7 +48,7 @@ void switch_page_directory(page_directory_t *dir)
     asm volatile("mov %0, %%cr3":: "r"(&dir->tablesPhysical));
     
     uint32_t cr0 = 0;
-    asm volatile("mov %%cr0, %0":: "r"(cr0));
+    asm volatile("mov %%cr0, %0": "=r"(cr0));
     cr0 |= 0x80000000;
     asm volatile("mov %0, %%cr0":: "r"(cr0));
 }
