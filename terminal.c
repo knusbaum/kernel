@@ -170,7 +170,6 @@ void terminal_write_dec(uint32_t d)
 void terminal_write_hex(uint32_t h)
 {
     char buff[11];
-    char x;
     buff[10] = 0;
     buff[0] = '0';
     buff[1] = 'x';

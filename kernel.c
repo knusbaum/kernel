@@ -74,8 +74,8 @@ void kernel_main()
 
   terminal_writestring("\nDone writing hex.\n");
 
-  terminal_writestring("Causing Page Fault.\n");
 
+  ASSERT(1 == 0);
 
 //  uint32_t *ptr = (uint32_t*)0xA0000000;
 //  uint32_t do_page_fault = *ptr;

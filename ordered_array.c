@@ -1,4 +1,5 @@
 #include "ordered_array.h"
+#include "kheap_placement.h"
 
 int8_t standard_lessthan(void *a, void *b)
 {
@@ -14,8 +15,8 @@ ordered_array_t create_ordered_array(uint32_t max_size, lessthan_t less_than)
 //    to_ret.max_size = max_size;
 //    to_ret.less_than = less_than;
 //    return to_ret;
-    void * array = kmalloc( max_size * sizeof(void *));
-    place_ordered_array(array, max_size, less_than);
+    void * array = (void *)kmalloc( max_size * sizeof(void *));
+    return place_ordered_array(array, max_size, less_than);
 }
 
 ordered_array_t place_ordered_array(void * addr, uint32_t max_size, lessthan_t less_than)
@@ -31,6 +32,7 @@ ordered_array_t place_ordered_array(void * addr, uint32_t max_size, lessthan_t l
 
 void destroy_ordered_array(ordered_array_t *array)
 {
+    (void)array;
     // kfree(array->array);
 }
 

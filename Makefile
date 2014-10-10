@@ -20,7 +20,9 @@ OBJECTS=terminal.o \
 	pit.o \
 	kheap_placement.o \
 	frame.o \
-	paging.o
+	paging.o \
+	ordered_array.o \
+	kheap.o
 
 
 all: $(KERNEL_IMG)

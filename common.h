@@ -12,4 +12,6 @@ static inline void panic(char *reason) {
     halt();
 }
 
+#define ASSERT(x) do { if(!(x)) { terminal_writestring("\nLine: "); terminal_write_dec(__LINE__); terminal_writestring(" File: "); terminal_writestring(__FILE__); panic("\nAssert failed."); } } while(0);
+
 #endif
