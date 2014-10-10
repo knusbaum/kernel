@@ -1,6 +1,6 @@
 #include "paging.h"
 #include "frame.h"
-#include "kheap.h"
+#include "kheap_placement.h"
 
 page_directory_t * kernel_directory;
 page_directory_t * current_directory;
@@ -33,9 +33,6 @@ void initialize_paging()
     {
         alloc_frame(get_page(i, 1, kernel_directory), 0, 0);
         i += 0x1000;
-        terminal_writestring("Allocating frame: ");
-        terminal_write_hex(i);
-        terminal_writestring("\n");
     }
 
     terminal_writestring("Done allocating frames.\n");

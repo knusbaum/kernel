@@ -18,7 +18,7 @@ OBJECTS=terminal.o \
 	isr.o \
 	pic.o \
 	pit.o \
-	kheap.o \
+	kheap_placement.o \
 	frame.o \
 	paging.o
 
