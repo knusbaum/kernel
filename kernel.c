@@ -61,22 +61,36 @@ void kernel_main()
   asm volatile ("int $0x4");
   //  asm volatile ("int $32");
 
-//  panic("KERNEL PANIC TEST!\n\n");
-//  terminal_writestring("done panic.\n");
 
   initialize_paging();
+
   terminal_writestring("Paging initialized.\n");
 
-  terminal_writestring("\nCausing page fault.\n");
+//  uint32_t j;
+//  for(j = 0; j < 0xFFFFFFFF; j++)
+//  {
+//      int x = *((char *)j);
+//  }
+
+  terminal_write_hex(0x01010101);
+  terminal_writestring("\n");
+  terminal_write_hex(0xFFFFFFFF);
+  terminal_writestring("\n");
+  terminal_write_hex(0xDEADBEEF);
+
+  terminal_writestring("\nDone writing hex.\n");
+
+  terminal_writestring("Causing Page Fault.\n");
+
+
   uint32_t *ptr = (uint32_t*)0xA0000000;
   uint32_t do_page_fault = *ptr;
-
-
   int i = do_page_fault;
 //  int i = 0;
   while(1){
     i++;
     //    terminal_write_dec(i);
+    
   }
   terminal_write_dec(i);
 

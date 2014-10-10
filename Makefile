@@ -1,7 +1,7 @@
 CC=cc
 AS=as
 
-CFLAGS= -ggdb -m32 -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+CFLAGS= -ggdb -m32 -std=gnu99 -ffreestanding -O0 -Wall -Wextra
 ASFLAGS= --32 -ggdb
 LDFLAGS= -m32 -ggdb -ffreestanding -O2 -nostdlib -lgcc
 

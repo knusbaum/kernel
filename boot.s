@@ -65,11 +65,11 @@ _start:
 	# the next interrupt arrives, and jumping to the halt instruction if it ever
 	# continues execution, just to be safe. We will create a local label rather
 	# than real symbol and jump to there endlessly.
+
 .global halt
 halt:	
 	cli
-        jmp halt
-	
+        hlt
 .Lhang:
 	jmp .Lhang
 	

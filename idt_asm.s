@@ -67,6 +67,8 @@ isr_noerr 31
 isr_stub:
 	pusha
 
+        cli
+        
 	mov 	%ds, %ax
 	pushl	%eax
 	movl	%eax, %esi
@@ -128,6 +130,8 @@ irq 15, 47
 irq_stub:
 	pusha
 
+        cli
+        
 	mov	%ds, %ax
 	pushl	%eax
 	movl	%eax, %esi

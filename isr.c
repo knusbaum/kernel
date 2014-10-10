@@ -15,9 +15,10 @@ void register_interrupt_handler(uint8_t interrupt, isr_handler_t handler)
 
 void isr_handler(registers_t regs)
 { 
-//    terminal_writestring("Received interrupt: ");
-//    terminal_write_dec(regs.int_no);
-//    terminal_writestring("\n");
+    terminal_writestring("Received interrupt: ");
+    terminal_write_dec(regs.int_no);
+    terminal_writestring("\n");
+
     if(interrupt_handlers[regs.int_no])
     {
         interrupt_handlers[regs.int_no](regs);

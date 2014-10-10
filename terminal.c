@@ -89,21 +89,26 @@ void move_cursor(uint8_t xpos, uint8_t ypos)
   outb(VGA_DATA_PORT, location);
 }
 
+static void clear_line(uint32_t line_num) {
+
+    uint16_t blank = make_vgaentry(' ', terminal_color);
+    //Clear the last line
+    for(unsigned int i = line_num * VGA_WIDTH; i < VGA_HEIGHT * VGA_WIDTH; i++)
+    {
+        terminal_buffer[i] = blank;
+        terminal_column = 0;
+    }
+}
+
 static void terminal_scroll()
 {
-  uint16_t blank = make_vgaentry(' ', terminal_color);
   //Move the lines up
   for(unsigned int i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++)
     {
       terminal_buffer[i] = terminal_buffer[i+VGA_WIDTH];
     }
 
-  //Clear the last line
-  for(unsigned int i = (VGA_HEIGHT - 1) * VGA_WIDTH; i < VGA_HEIGHT * VGA_WIDTH; i++)
-    {
-      terminal_buffer[i] = blank;
-      terminal_column = 0;
-    }
+  clear_line(VGA_HEIGHT-1);
 }
 
 static void terminal_advance()
@@ -125,8 +130,10 @@ static void terminal_newline()
     {
         terminal_scroll();
         terminal_row--;
-        //terminal_row = 0;
+//        terminal_row = 0;
+        
     }
+//    clear_line(terminal_row);
     //  move_cursor(terminal_column, terminal_row);
 }
  
@@ -158,6 +165,33 @@ void terminal_write_dec(uint32_t d)
   char buff[13];
   char *x = itos(d, buff, 13);
   terminal_writestring(x);
+}
+
+void terminal_write_hex(uint32_t h)
+{
+    char buff[11];
+    char x;
+    buff[10] = 0;
+    buff[0] = '0';
+    buff[1] = 'x';
+    int i;
+    int rem;
+    
+    for(i = 9; i >=2; i--){
+        rem = h%16;
+        switch(rem)
+        {
+        case 10: buff[i] = 'A'; break;
+        case 11: buff[i] = 'B'; break;
+        case 12: buff[i] = 'C'; break;
+        case 13: buff[i] = 'D'; break;
+        case 14: buff[i] = 'E'; break;
+        case 15: buff[i] = 'F'; break;
+        default: buff[i] = rem + '0'; break;
+        }
+        h/=16;
+    }
+    terminal_writestring(buff);
 }
 
 void clear_screen(void)
