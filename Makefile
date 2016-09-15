@@ -3,7 +3,7 @@ AS=as
 
 CFLAGS= -ggdb -m32 -std=gnu99 -ffreestanding -O0 -Wall -Wextra
 ASFLAGS= --32 -ggdb
-LDFLAGS= -m32 -ggdb -ffreestanding -O2 -nostdlib -lgcc
+LDFLAGS= -m32 -ggdb -ffreestanding -O2 -nostdlib -lgcc -Wl,--build-id=none
 
 KERNEL_IMG=myos.bin
 OBJECTS=terminal.o \
