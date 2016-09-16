@@ -5,15 +5,17 @@
 
 typedef struct registers
 {
-  uint32_t ds;                  // Data segment selector
-  uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; // Pushed by pusha.
-  uint32_t int_no, err_code;    // Interrupt number and error code (if applicable)
-  uint32_t eip, cs, eflags, useresp, ss; // Pushed by the processor automatically.
+    uint32_t ds;                             // Data segment selector
+    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax; // Pushed by pusha.
+    uint32_t int_no, err_code;               // Interrupt number and error code (if applicable)
+    uint32_t eip, cs, eflags, useresp, ss;   // Pushed by the processor automatically.
 } registers_t;
 
+// This intentionally accepts a *COPY* of the registers.
+// It's slower, but it prevents service routines from messing with them.
+// Maybe messing with them is useful, and we'll change this later.
 typedef void (*isr_handler_t)(registers_t);
 void register_interrupt_handler(uint8_t interrupt, isr_handler_t handler);
-
 
 #define IRQ0 32
 #define IRQ1 33
@@ -31,6 +33,5 @@ void register_interrupt_handler(uint8_t interrupt, isr_handler_t handler);
 #define IRQ13 45
 #define IRQ14 46
 #define IRQ15 47
-
 
 #endif

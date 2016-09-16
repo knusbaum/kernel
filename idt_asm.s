@@ -1,39 +1,39 @@
 .section .text
-.global idt_flush
-	
-.type idt_flush, @function
-	# void idt_flush(idt_ptr_t *)
-idt_flush:	
-	movl	4(%esp),%eax
-	lidt	(%eax)
-	ret
-	
-.size idt_flush, . - idt_flush
+.global load_idt
+
+.type load_idt, @function
+    # void load_idt(idt_ptr_t *)
+load_idt:
+    movl	4(%esp),%eax
+    lidt	(%eax)
+    ret
+
+.size load_idt, . - load_idt
 
 # Macro for interrupt handler which does not push an error (we push a dummy val)
 .macro isr_noerr num
 .global isr\num
 isr\num:
-	cli
-	push	$0
-	push	$\num
-	jmp	isr_stub
+    cli
+    push	$0
+    push	$\num
+    jmp	isr_stub
 .endm
 
-# Macro for interrupt handler which pushes an error 
+# Macro for interrupt handler which pushes an error
 .macro isr_err num
 .global isr\num
 isr\num:
-	cli
-	push	$\num
-	jmp	isr_stub
+    cli
+    push	$\num
+    jmp	isr_stub
 .endm
-	
+
 isr_noerr 0
 isr_noerr 1
 isr_noerr 2
 isr_noerr 3
-isr_noerr 4	
+isr_noerr 4
 isr_noerr 5
 isr_noerr 6
 isr_noerr 7
@@ -65,33 +65,33 @@ isr_noerr 31
 
 .extern isr_handler
 isr_stub:
-	pusha
+    pusha
 
-	mov 	%ds, %ax
-	pushl	%eax
-	movl	%eax, %esi
+    mov     %ds, %ax
+    pushl	%eax
+    movl	%eax, %esi
 
-	movw	$0x10, %ax
-	movw	%ax, %ds
-	movw	%ax, %es
-	movw	%ax, %fs
-	movw	%ax, %gs
-	
-	call	isr_handler
-	
-	pop	%eax
-	movl	%esi, %eax
-	
-	mov	%ax, %ds
-	movw	%ax, %ds
-	movw	%ax, %es
-	movw	%ax, %fs
-	movw	%ax, %gs
+    movw	$0x10, %ax
+    movw	%ax, %ds
+    movw	%ax, %es
+    movw	%ax, %fs
+    movw	%ax, %gs
 
-	popa
-	add	$8, %esp
-	sti
-	iret
+    call	isr_handler
+
+    pop	%eax
+    movl	%esi, %eax
+
+    mov	%ax, %ds
+    movw	%ax, %ds
+    movw	%ax, %es
+    movw	%ax, %fs
+    movw	%ax, %gs
+
+    popa
+    add	$8, %esp
+    sti
+    iret
 
 
 
@@ -100,12 +100,12 @@ isr_stub:
 .macro irq num, map
 .global irq\num
 irq\num:
-	cli
-	push	$0
-	push	$\map
-	jmp	irq_stub
+    cli
+    push	$0
+    push	$\map
+    jmp	irq_stub
 .endm
-	
+
 
 irq 0, 32
 irq 1, 33
@@ -126,29 +126,29 @@ irq 15, 47
 
 .extern irq_handler
 irq_stub:
-	pusha
+    pusha
 
-	mov	%ds, %ax
-	pushl	%eax
-	movl	%eax, %esi
-	
-	movw	$0x10, %ax
-	movw	%ax, %ds
-	movw	%ax, %es
-	movw	%ax, %fs
-	movw	%ax, %gs
+    mov	%ds, %ax
+    pushl	%eax
+    movl	%eax, %esi
 
-	call	irq_handler
+    movw	$0x10, %ax
+    movw	%ax, %ds
+    movw	%ax, %es
+    movw	%ax, %fs
+    movw	%ax, %gs
 
-	pop	%ebx
-	movl	%esi, %ebx
-	
-	movw	%bx, %ds
-	movw	%bx, %es
-	movw	%bx, %fs
-	movw	%bx, %gs
-	
-	popa
-	add $8, %esp
-	sti
-	iret
+    call	irq_handler
+
+    pop	%ebx
+    movl	%esi, %ebx
+
+    movw	%bx, %ds
+    movw	%bx, %es
+    movw	%bx, %fs
+    movw	%bx, %gs
+
+    popa
+    add $8, %esp
+    sti
+    iret
