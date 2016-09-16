@@ -6,6 +6,7 @@
 #include "terminal.h"
 #include "kmalloc_early.h"
 #include "common.h"
+#include "kheap.h"
 
 // void init_frame_allocator();
 // void alloc_frame(struct page *page, int is_kernel, int is_writeable);
@@ -14,11 +15,14 @@
 struct page_directory *kernel_directory;
 struct page_directory *current_directory;
 extern uint32_t placement_address;
+
+uint8_t initialized = 0;
+
 void initialize_paging() {
     init_frame_allocator();
 
     // Make a page directory for the kernel.
-    kernel_directory = (struct page_directory *)kmalloc_a(sizeof (struct page_directory));
+    kernel_directory = (struct page_directory *)e_kmalloc_a(sizeof (struct page_directory));
     memset(kernel_directory, 0, sizeof (struct page_directory));
     current_directory = kernel_directory;
 
@@ -34,17 +38,29 @@ void initialize_paging() {
     // Reaching into kmalloc_early and grabbing placement_address
     // is not ideal.
     uint32_t i = 0;
-    while(i < placement_address) {
+    while(i < placement_address)
+    {
         // Kernel code is readable but not writeable from userspace.
         alloc_frame( get_page(i, 1, kernel_directory), 0, 0);
         i += 0x1000;
     }
+    // A page to bootstrap the kheap
+    uint32_t kheap_first_page = i;
+    alloc_frame(get_page(i, 1, kernel_directory));
+
+    // Before we do anything else, disable the original kmalloc so we don't
+    // start leaking into the address space.
+    uint32_t heap_start = disable_early_kmalloc();
 
     // Before we enable paging, we must register our page fault handler.
     register_interrupt_handler(14, page_fault);
 
     // Now, enable paging!
     switch_page_directory(kernel_directory);
+    initialized = 1;
+
+    // Set up the kernel heap!
+    initialize_kheap(kheap_first_page);
 }
 
 void switch_page_directory(struct page_directory *dir)
@@ -71,7 +87,14 @@ struct page *get_page(uint32_t address, int make, struct page_directory *dir)
     else if(make)
     {
         uint32_t tmp;
-        dir->tables[table_idx] = (struct page_table *)kmalloc_ap(sizeof(struct page_table), &tmp);
+        if(!initialized)
+        {
+            dir->tables[table_idx] = (struct page_table *)e_kmalloc_ap(sizeof(struct page_table), &tmp);
+        }
+        else
+        {
+            dir->tables[table_idx] = (struct page_table *)
+        }
         memset(dir->tables[table_idx], 0, 0x1000);
         dir->tablesPhysical[table_idx] = tmp | 0x7; // PRESENT, RW, US.
         return &dir->tables[table_idx]->pages[address%1024];

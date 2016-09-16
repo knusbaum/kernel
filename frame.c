@@ -27,7 +27,7 @@ void init_frame_allocator()
     }
     // We might as well use up a full page,
     // so allocate 4096 bytes (2048 page indecies)
-    free_frames = (uint16_t*)kmalloc_a(0x1000);
+    free_frames = (uint16_t*)e_kmalloc_a(0x1000);
     stack_count = 0x1000 / sizeof (uint16_t);
 }
 

@@ -11,6 +11,7 @@
 #include "isr.h"
 #include "paging.h"
 #include "common.h"
+#include "kmalloc_early.h"
 
 /* Check if the compiler thinks if we are targeting the wrong operating system. */
 //#if defined(__linux__)
@@ -49,8 +50,12 @@ void kernel_main()
     asm volatile ("int $0x4");
     asm volatile ("int $32");
 
-    uint32_t *ptr = (uint32_t*)0xA0000000;
-    uint32_t do_page_fault = *ptr;
+////    uint32_t *ptr = (uint32_t*)0xA0000000;
+////    uint32_t do_page_fault = *ptr;
+//    uint32_t addr = kmalloc_a(1);
+//    terminal_writestring("Kernel finished initializing with end address: ");
+//    terminal_write_hex(addr);
+//    terminal_writestring("\n");
 
     int i = 0;
     while(1){
