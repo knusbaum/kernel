@@ -5,4 +5,6 @@
 
 void *memset(void *p, int c, size_t count);
 
+void PANIC(char *err);
+
 #endif

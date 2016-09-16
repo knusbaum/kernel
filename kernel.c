@@ -8,7 +8,9 @@
 #include "idt.h"
 #include "pit.h"
 #include "pic.h"
-//#include "port.h"
+#include "isr.h"
+#include "paging.h"
+#include "common.h"
 
 /* Check if the compiler thinks if we are targeting the wrong operating system. */
 //#if defined(__linux__)
@@ -36,6 +38,8 @@ void kernel_main()
     init_idt();
 
     init_timer(100);
+
+    initialize_paging();
 
     terminal_settextcolor(make_color(COLOR_WHITE, COLOR_BLACK));
 

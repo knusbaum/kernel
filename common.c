@@ -1,4 +1,7 @@
 #include "common.h"
+#include "terminal.h"
+
+extern void halt();
 
 void *memset(void *p, int c, size_t count)
 {
@@ -7,4 +10,10 @@ void *memset(void *p, int c, size_t count)
         ((char *)p)[i] = c;
     }
     return p;
+}
+
+void PANIC(char *err) {
+    terminal_writestring("PANIC: ");
+    terminal_writestring(err);
+    halt();
 }

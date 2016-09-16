@@ -12,7 +12,10 @@ OBJECTS=terminal.o \
 	idt_asm.o \
 	isr.o \
 	pic.o \
-	pit.o
+	pit.o \
+	kmalloc_early.o \
+	frame.o \
+	paging.o
 #	interrupt.o
 CFLAGS = -ggdb -m32 -O0 -Wall -Wextra -std=gnu99 -ffreestanding
 AFLAGS = --32 -ggdb
@@ -77,3 +80,12 @@ pic.o : pic.c pic.h port.h terminal.h
 
 pit.o : pit.c pit.h isr.h port.h terminal.h
 	$(CC) $(CFLAGS) -c pit.c -o pit.o
+
+kmalloc_early.o : kmalloc_early.c kmalloc_early.h
+	$(CC) $(CFLAGS) -c kmalloc_early.c -o kmalloc_early.o
+
+frame.o : frame.c frame.h
+	$(CC) $(CFLAGS) -c frame.c -o frame.o
+
+paging.o : paging.c paging.h
+	$(CC) $(CFLAGS) -c paging.c -o paging.o
