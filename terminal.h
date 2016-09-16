@@ -39,5 +39,6 @@ void terminal_settextcolor(uint8_t color);
 void terminal_putchar(char c);
 void terminal_writestring(const char* data);
 void terminal_write_dec(uint32_t d);
+void terminal_write_hex(uint32_t d);
 
 #endif

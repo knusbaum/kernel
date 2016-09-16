@@ -45,10 +45,12 @@ void kernel_main()
 
     terminal_writestring("Right now I don't do much. Soon I'll have a few things to do.\n");
 
-
     asm volatile ("int $0x3");
     asm volatile ("int $0x4");
     asm volatile ("int $32");
+
+    uint32_t *ptr = (uint32_t*)0xA0000000;
+    uint32_t do_page_fault = *ptr;
 
     int i = 0;
     while(1){

@@ -102,8 +102,8 @@ void page_fault(registers_t regs)
     if (rw) {terminal_writestring("read-only ");}
     if (us) {terminal_writestring("user-mode ");}
     if (reserved) {terminal_writestring("reserved ");}
-    terminal_writestring(") at 0x");
-    terminal_write_dec(faulting_address);
+    terminal_writestring(") at ");
+    terminal_write_hex(faulting_address);
     terminal_writestring("\n");
     PANIC("Page fault");
 }

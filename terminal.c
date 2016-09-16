@@ -178,3 +178,53 @@ void terminal_write_dec(uint32_t d)
     char *x = itos(d, buff, 13);
     terminal_writestring(x);
 }
+
+static void write_hex_char(uint8_t byte)
+{
+    byte = byte & 0x0F;
+    if(byte < 0xA)
+    {
+        if(byte == 0)
+        {
+            terminal_putchar('0');
+            return;
+        }
+        char buff[2];
+        itos(byte, buff, 2);
+        terminal_putchar(buff[0]);
+    }
+    else
+    {
+        switch(byte)
+        {
+        case 0x0A:
+            terminal_putchar('A');
+            break;
+        case 0x0B:
+            terminal_putchar('B');
+            break;
+        case 0x0C:
+            terminal_putchar('C');
+            break;
+        case 0x0D:
+            terminal_putchar('D');
+            break;
+        case 0x0E:
+            terminal_putchar('E');
+            break;
+        case 0x0F:
+            terminal_putchar('F');
+            break;
+        }
+    }
+}
+
+void terminal_write_hex(uint32_t d)
+{
+    terminal_writestring("0x");
+    for(int i = 28; i >= 0; i-=4)
+    {
+        write_hex_char(d>>i);
+    }
+
+}
