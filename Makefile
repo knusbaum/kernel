@@ -15,7 +15,8 @@ OBJECTS=terminal.o \
 	pit.o \
 	kmalloc_early.o \
 	frame.o \
-	paging.o
+	paging.o \
+	kheap.o
 #	interrupt.o
 CFLAGS = -ggdb -m32 -O0 -Wall -Wextra -std=gnu99 -ffreestanding
 AFLAGS = --32 -ggdb
@@ -89,3 +90,6 @@ frame.o : frame.c frame.h
 
 paging.o : paging.c paging.h
 	$(CC) $(CFLAGS) -c paging.c -o paging.o
+
+kheap.o : kheap.c kheap.h
+	$(CC) $(CFLAGS) -c kheap.c -o kheap.o

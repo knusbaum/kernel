@@ -174,6 +174,9 @@ void terminal_writestring(const char* data)
 
 void terminal_write_dec(uint32_t d)
 {
+    if(d == 0) {
+        terminal_putchar('0');
+    }
     char buff[13];
     char *x = itos(d, buff, 13);
     terminal_writestring(x);

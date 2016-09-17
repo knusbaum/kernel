@@ -54,6 +54,11 @@ void switch_page_directory(struct page_directory *new);
 struct page *get_page(uint32_t address, int make, struct page_directory *dir);
 
 /**
+ * Maps a kernel page. Returns NULL if it was unable to map.
+ */
+struct page *map_kernel_page(uint32_t address);
+
+/**
  * Handler for page faults.
  */
 void page_fault(registers_t regs);

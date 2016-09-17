@@ -26,19 +26,19 @@ static uint32_t kmalloc_imp(uint32_t sz, int align, uint32_t *phys)
     return tmp;
 }
 
-uint32_t kmalloc_a(uint32_t sz) {
+uint32_t e_kmalloc_a(uint32_t sz) {
     return kmalloc_imp(sz, 1, NULL);
 }
 
-uint32_t kmalloc_p(uint32_t sz, uint32_t *phys) {
+uint32_t e_kmalloc_p(uint32_t sz, uint32_t *phys) {
     return kmalloc_imp(sz, 0, phys);
 }
 
-uint32_t kmalloc_ap(uint32_t sz, uint32_t *phys) {
+uint32_t e_kmalloc_ap(uint32_t sz, uint32_t *phys) {
     return kmalloc_imp(sz, 1, phys);
 }
 
-uint32_t kmalloc(uint32_t sz) {
+uint32_t e_kmalloc(uint32_t sz) {
     return kmalloc_imp(sz, 0, NULL);
 }
 

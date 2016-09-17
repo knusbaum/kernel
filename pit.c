@@ -21,8 +21,8 @@ static void timer_callback(registers_t regs)
     if(modcount == 0)
     {
         tick++;
-        terminal_write_dec(tick);
-        terminal_putchar('\n');
+//        terminal_write_dec(tick);
+//        terminal_putchar('\n');
     }
 }
 
