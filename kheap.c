@@ -38,18 +38,42 @@ void malloc_stats() {
     terminal_writestring(" ends @ ");
     terminal_write_hex((uint32_t)memend);
     terminal_writestring(" and contains ");
-    terminal_write_dec(memend - memhead);
-    terminal_writestring(" bytes.\nCurrent allocations: [");
+
+    uint32_t bytes = memend - memhead;
+    if(bytes / 1024 / 1024 > 0) {
+        terminal_write_dec(bytes / 1024 / 1024);
+        terminal_writestring(" MiB.\nCurrent allocations: [");
+    }
+    else if(bytes / 1024 > 0) {
+        terminal_write_dec(bytes / 1024);
+        terminal_writestring(" KiB.\nCurrent allocations: [");
+    }
+    else {
+        terminal_write_dec(bytes / 1024);
+        terminal_writestring(" KiB.\nCurrent allocations: [");
+    }
+
     terminal_write_dec(allocations);
-    terminal_writestring("]\nFree bytes: [");
+    terminal_writestring("]\nFree: [");
     uint32_t free = 0;
     struct free_header *current = head;
     while(current) {
         free += current->h.size;
         current = current->next;
     }
-    terminal_write_dec(free);
-    terminal_writestring("]\n");
+
+    if(free / 1024 / 1024 > 0) {
+        terminal_write_dec(free / 1024 / 1024);
+        terminal_writestring(" MiB]\n");
+    }
+    else if(free / 1024 > 0) {
+        terminal_write_dec(free / 1024);
+        terminal_writestring(" KiB]\n");
+    }
+    else {
+        terminal_write_dec(free);
+        terminal_writestring(" Bytes]\n");
+    }
 }
 
 static struct header *set_header_footer(char *block, uint32_t block_size) {
@@ -352,6 +376,15 @@ static void do_kfree(void *p) {
     // We couldn't get pointers from either the previous or the next block since neither were free.
     // We won't be merging with any other blocks. We just want to find the closest previous block
     // So we can insert the block into the free list.
+
+    // First check if there even ARE any free blocks before this one.
+    // This is an optimization to avoid scanning backwards through
+    // The entire heap if we don't need to.
+    if(head == NULL || head > block_header) {
+        // There are no blocks before this one.
+        prev_block = NULL;
+    }
+
     while(prev_block) {
         if(prev_block->h.free) {
             break;

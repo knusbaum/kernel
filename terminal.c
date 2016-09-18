@@ -264,10 +264,10 @@ void terminal_set_status(char *status)
 void terminal_set_cursor(uint8_t x, uint8_t y)
 {
     if(x >= VGA_WIDTH) {
-        x = VGA_WIDTH - 1;
+        x = terminal_column;
     }
     if(y >= VGA_HEIGHT) {
-        y = VGA_HEIGHT - 1;
+        y = terminal_row;
     }
 
     terminal_column = x;
