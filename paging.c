@@ -8,10 +8,6 @@
 #include "common.h"
 #include "kheap.h"
 
-// void init_frame_allocator();
-// void alloc_frame(struct page *page, int is_kernel, int is_writeable);
-// void free_frame(struct page *page);
-
 struct page_directory *kernel_directory;
 struct page_directory *current_directory;
 extern uint32_t placement_address;
@@ -32,7 +28,6 @@ void initialize_paging(uint32_t total_frames) {
     terminal_writestring("Allocating kernel page tables... ");
     uint32_t i = 0;
     for(i = 0; i < 0xFFFFFFFF;) {
-        //terminal_putchar('.');
         get_page(i, 1, kernel_directory);
         i += 0x1000 * 1024;
         if(i == 0) {
@@ -40,7 +35,7 @@ void initialize_paging(uint32_t total_frames) {
         }
     }
     terminal_writestring("Done\n");
-    
+
     // We need to identity map (phys addr = virt addr) from
     // 0x0 to the end of used memory, so we can access this
     // transparently, as if paging wasn't enabled.
@@ -51,7 +46,7 @@ void initialize_paging(uint32_t total_frames) {
 
     // This is hacky. Probably want to do this some other way.
     // Reaching into kmalloc_early and grabbing placement_address
-    // is not ideal.    
+    // is not ideal.
     while(i < placement_address)
     {
         // Kernel code is readable but not writeable from userspace.
@@ -66,7 +61,7 @@ void initialize_paging(uint32_t total_frames) {
     for(i = 0; i < INITIAL_HEAP_PAGE_COUNT; i++) {
         alloc_frame(get_page(heap_start + (i * 0x1000), 1, kernel_directory), 0, 0);
     }
-    
+
     // Before we enable paging, we must register our page fault handler.
     register_interrupt_handler(14, page_fault);
 
@@ -108,8 +103,6 @@ struct page *get_page(uint32_t address, int make, struct page_directory *dir)
         }
         else
         {
-            //PANIC("kheap kmalloc_ap not implemented yet.");
-            //dir->tables[table_idx] = (struct page_table *)
             dir->tables[table_idx] = (struct page_table *)kmalloc(sizeof(struct page_table), 1, &tmp);
         }
         memset(dir->tables[table_idx], 0, 0x1000);

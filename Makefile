@@ -17,18 +17,14 @@ OBJECTS=terminal.o \
 	frame.o \
 	paging.o \
 	kheap.o
-#	interrupt.o
-CFLAGS = -ggdb -m32 -O0 -Wall -Wextra -std=gnu99 -ffreestanding #-fstack-protector -Wstack-protector
+
+CFLAGS = -ggdb -m32 -O0 -Wall -Wextra -std=gnu99 -ffreestanding
 AFLAGS = --32 -ggdb
 LDFLAGS = $(CFLAGS) -nostdlib -lgcc -Wl,--build-id=none
 
 all: $(KERNEL_IMG)
 
-#run: $(KERNEL_IMG)
-#	sudo cp $(KERNEL_IMG) /boot/
-#	sudo init 6
-
-clean: 
+clean:
 	-@rm *.o *~
 
 nuke: clean

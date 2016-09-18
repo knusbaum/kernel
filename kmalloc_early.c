@@ -45,7 +45,7 @@ uint32_t e_kmalloc(uint32_t sz) {
 uint32_t disable_early_kmalloc() {
     uint32_t end = placement_address;
     if(!(end & 0xFFF)) return end;
-    
+
     end &= 0xFFFFF000; // Set to current page
     end += 0x1000;
     enabled = 0;

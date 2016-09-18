@@ -25,11 +25,10 @@ static void timer_callback(registers_t regs)
     modcount = (modcount + 1) % MODULO;
     if(modcount == 0)
     {
-        
         tick++;
-        // terminal_write_dec(tick);
-        // terminal_putchar('\n');
-        // terminal_set_status("Hello
+
+        // This whole thing below is sort of ugly and hacky
+        // but I guess it works for now.
 
         // 1  2  3  4  5  6  7  8  9  10 11 12 13 14
         // F  r  a  m  e  s  :     6  5  5  3  5
@@ -39,7 +38,7 @@ static void timer_callback(registers_t regs)
 
         // 29 30 31 32
         // M  i  B  \0
-        
+
         char statusbuffer[BUFFSIZE];
         int i = 0;
         for(; i < BUFFSIZE; i++) {
@@ -54,7 +53,7 @@ static void timer_callback(registers_t regs)
         }
         itos(allocated_frames, statusbuffer + 8, 6);
         statusbuffer[13] = ' ';
-        
+
         char *mem = "Mem: ";
         i = 14;
         while(*mem != 0) {
@@ -64,12 +63,12 @@ static void timer_callback(registers_t regs)
 
         uint32_t used = (allocated_frames * 0x1000) / 1024 / 1024;
         uint32_t available = (total_frames * 0x1000) / 1024 / 1024;
-        
+
         itos(used, statusbuffer + 18, 5);
         statusbuffer[22] = '/';
         itos(available, statusbuffer + 23, 5);
         statusbuffer[27] = ' ';
-        
+
         char *mib = "MiB";
         i = 28;
         while(*mib != 0) {
@@ -77,22 +76,19 @@ static void timer_callback(registers_t regs)
             mib++;
         }
         statusbuffer[31] = 0;
-        
+
         terminal_set_status(statusbuffer);
     }
 }
 
 void init_timer(uint32_t frequency)
 {
-
     terminal_writestring("Initializing PIT timer\n");
-
     register_interrupt_handler(IRQ0, &timer_callback);
 
-    //  uint32_t divisor = PIT_NATURAL_FREQ / frequency;
     uint32_t divisor;
     if(frequency)
-        divisor = 1193180 / frequency;
+        divisor = PIT_NATURAL_FREQ / frequency;
     else
         divisor = 0;
     /*
@@ -103,10 +99,6 @@ void init_timer(uint32_t frequency)
 
       )
     */
-//    terminal_writestring("Divisor: ");
-//    terminal_write_dec(divisor);
-//    terminal_writestring("\n");
-
     outb(PIT_COMMAND, 0x36);
 
     //Chop freq up into bytes and send to data0 port
@@ -115,6 +107,4 @@ void init_timer(uint32_t frequency)
 
     outb(PIT_DATA0, low);
     outb(PIT_DATA0, high);
-
-    //terminal_writestring("Done setting up PIT\n");
 }

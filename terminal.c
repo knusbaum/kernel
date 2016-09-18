@@ -145,8 +145,6 @@ static void terminal_newline()
     {
         terminal_row--;
         terminal_scroll();
-
-        //terminal_row = 0;
     }
     move_cursor(terminal_column, terminal_row);
 }
@@ -246,7 +244,6 @@ void terminal_set_status(char *status)
     for(unsigned int i = 0; i < VGA_WIDTH; i++)
     {
         terminal_buffer[i] = blank;
-        //terminal_column = 0;
     }
 
     size_t backup_row = terminal_row;
@@ -259,7 +256,7 @@ void terminal_set_status(char *status)
     text_color = status_color;
     terminal_writestring(status);
     text_color = temp_color;
-    
+
     terminal_row = backup_row;
     terminal_column = backup_column;
 }

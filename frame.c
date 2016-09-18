@@ -6,7 +6,6 @@
 #include "kmalloc_early.h"
 #include "common.h"
 
-// Only going to have 65536 frames for now. (256 MiB RAM)
 
 // We're going to track free frames in a stack. (array)
 uint32_t stack_count = 0;     // The current capacity of the stack
@@ -28,11 +27,9 @@ void init_frame_allocator(uint32_t system_frames)
         // We've already initialized the frame allocator!
         return;
     }
-//    // We might as well use up a full page,
-//    // so allocate 4096 bytes (2048 page indecies)
-//    free_frames = (uint16_t*)e_kmalloc_a(0x1000);
-//    stack_count = 0x1000 / sizeof (uint16_t);
 
+    // Allocate a big enough stack to hold all the frames on the system.
+    // Should be at most 4 MiB.
     free_frames = (uint32_t *)e_kmalloc(system_frames * sizeof (uint32_t));
     stack_count = system_frames;
 }
@@ -49,7 +46,7 @@ void alloc_frame(struct page *page, int is_kernel, int is_writeable)
     {
         // There are free frames in the stack!
         idx = free_frames[top_of_stack];
-        top_of_stack--; // That frame is no longer on the stack.
+        top_of_stack--; // POP
     }
     else
     {
@@ -57,12 +54,11 @@ void alloc_frame(struct page *page, int is_kernel, int is_writeable)
         // Grab one from the end of memory.
         if(end_of_mem >= total_frames) {
             // There are no free frames in the frame stack
-            // and we're at the limit of our 256 MiB.
+            // and we're at the limit of our physical memory.
             PANIC("Cannot alloc frame. Out of memory!");
         }
         idx = end_of_mem;
         end_of_mem++;
-
     }
     page->present = 1;                  // Mark it as present.
     page->rw      = (is_writeable)?1:0; // Should the page be writeable?
@@ -76,20 +72,12 @@ void free_frame(struct page *page)
     // Put the frame into the stack.
     if(((uint16_t)top_of_stack) >= stack_count)
     {
-        // The stack is full! Allocate more stack space!
-        // TODO: We need to do this once the actual kernel heap
-        // is implemented. If this happens before the kheap is
-        // initialized, the kernel should panic.
-        // For now, we just panic.
-        PANIC("Frame pool is full!");
+        // This should never happen because we're allocating
+        // the full stack during initialization.
+        PANIC("Frame pool is full! Something weird happened!");
     }
-//    terminal_writestring("Adding frame: ");
-//    terminal_write_hex(page->frame << 12);
-//    terminal_writestring(" to pool.\n");
 
-
-
-    free_frames[top_of_stack] = (uint16_t)(page->frame & 0xFFFF); // only 65536 pages (for now)
+    free_frames[top_of_stack] = page->frame;
     page->frame = 0x0;
     allocated_frames--;
 }

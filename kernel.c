@@ -1,6 +1,4 @@
-#if !defined(__cplusplus)
-#include <stdbool.h> /* C doesn't have booleans by default. */
-#endif
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include "terminal.h"
@@ -11,13 +9,7 @@
 #include "isr.h"
 #include "paging.h"
 #include "common.h"
-//#include "kmalloc_early.h"
 #include "kheap.h"
-
-/* Check if the compiler thinks if we are targeting the wrong operating system. */
-//#if defined(__linux__)
-//#error "You are not using a cross-compiler, you will most certainly run into trouble"
-//#endif
 
 /* This tutorial will only work for the 32-bit ix86 targets. */
 #if !defined(__i386__)
@@ -62,14 +54,10 @@ struct multiboot_info
     unsigned long mmap_addr;
 };
 
-
-//extern uint32_t allocated_frames;
-
 void kernel_main(struct multiboot_info *mi)
 {
     terminal_initialize(make_color(COLOR_DARK_GREY, COLOR_WHITE));
     terminal_set_status_color(make_color(COLOR_WHITE, COLOR_BLACK));
-    //terminal_writestring("Hello, kernel World!\nHello, Again!\n");
     terminal_writestring("Booting kernel.\n");
     terminal_writestring("Have: ");
     terminal_write_dec(mi->mem_upper * 1024);
@@ -88,13 +76,9 @@ void kernel_main(struct multiboot_info *mi)
     init_timer(100);
 
     initialize_paging(total_frames);
-    // There are some spinwaits in here for cinematic effect.
-    // Just because it's fun to watch it do stuff.
-    int i;
-    for(i = 0; i < 0x0FFFFFFF; i++){}
+
     malloc_stats();
     terminal_writestring("Done setting up paging.\nKernel is ready to go!!!\n\n");
-    for(i = 0; i < 0x0FFFFFFF; i++){}
     // Kernel ready to go!
 
     terminal_settextcolor(make_color(COLOR_BLUE, COLOR_WHITE));
@@ -108,21 +92,17 @@ void kernel_main(struct multiboot_info *mi)
 
     terminal_writestring("Allocating a bunch of kheap!\n");
     void *ptrs2[4096];
+    int i;
     for(i = 0; i < 4096; i++) {
         ptrs2[i] = kmalloc(4096 * 10, 0, 0);
-        int j;
-        for(j = 0; j < 0x000FFFFF; j++) {}
     };
 
     terminal_writestring("Done!\n");
     malloc_stats();
-    for(i = 0; i < 0x00FFFFFF; i++){}
     terminal_writestring("Freeing!\n");
 
     for(i = 4095; i >= 0; i--) {
         kfree(ptrs2[i]);
-        int j;
-        for(j = 0; j < 0x000FFFFF; j++) {}
     }
     malloc_stats();
     terminal_writestring("Done. Halting.\n");
