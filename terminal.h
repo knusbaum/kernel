@@ -41,4 +41,9 @@ void terminal_writestring(const char* data);
 void terminal_write_dec(uint32_t d);
 void terminal_write_hex(uint32_t d);
 
+void terminal_set_status_color(uint8_t color);
+void terminal_set_status(char *status);
+
+void terminal_set_cursor(uint8_t x, uint8_t y);
+
 #endif

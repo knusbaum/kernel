@@ -8,11 +8,12 @@
 #define VGA_CURSOR_HIGH  14
 #define VGA_CURSOR_LOW   15
 
-size_t terminal_row;
-size_t terminal_column;
-uint8_t terminal_color;
-uint8_t text_color;
-uint16_t* terminal_buffer;
+static size_t terminal_row;
+static size_t terminal_column;
+static uint8_t terminal_color;
+static uint8_t text_color;
+static uint16_t* terminal_buffer;
+static uint8_t status_color;
 
 static uint16_t make_vgaentry(char c, uint8_t color);
 static void terminal_putentryat(char c, uint8_t color, size_t x, size_t y);
@@ -65,10 +66,11 @@ static void move_cursor(uint8_t xpos, uint8_t ypos)
 
 void terminal_initialize(uint8_t color)
 {
-    terminal_row = 0;
+    terminal_row = 1;
     terminal_column = 0;
     terminal_color = color;
     text_color = color;
+    status_color = color;
     terminal_buffer = (uint16_t*) 0xB8000;
     move_cursor(0,0);
     for ( size_t y = 0; y < VGA_HEIGHT; y++ )
@@ -111,7 +113,7 @@ static void terminal_scroll()
 {
     uint16_t blank = make_vgaentry(' ', terminal_color);
     //Move the lines up
-    for(unsigned int i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++)
+    for(unsigned int i = VGA_WIDTH; i < VGA_WIDTH * VGA_HEIGHT; i++)
     {
         terminal_buffer[i] = terminal_buffer[i+VGA_WIDTH];
     }
@@ -230,4 +232,47 @@ void terminal_write_hex(uint32_t d)
         write_hex_char(d>>i);
     }
 
+}
+
+void terminal_set_status_color(uint8_t color)
+{
+    status_color = color;
+}
+
+void terminal_set_status(char *status)
+{
+    uint16_t blank = make_vgaentry(' ', status_color);
+    //Clear the first line
+    for(unsigned int i = 0; i < VGA_WIDTH; i++)
+    {
+        terminal_buffer[i] = blank;
+        //terminal_column = 0;
+    }
+
+    size_t backup_row = terminal_row;
+    size_t backup_column = terminal_column;
+
+    terminal_row = 0;
+    terminal_column = 0;
+
+    uint8_t temp_color = text_color;
+    text_color = status_color;
+    terminal_writestring(status);
+    text_color = temp_color;
+    
+    terminal_row = backup_row;
+    terminal_column = backup_column;
+}
+
+void terminal_set_cursor(uint8_t x, uint8_t y)
+{
+    if(x >= VGA_WIDTH) {
+        x = VGA_WIDTH - 1;
+    }
+    if(y >= VGA_HEIGHT) {
+        y = VGA_HEIGHT - 1;
+    }
+
+    terminal_column = x;
+    terminal_row = y;
 }

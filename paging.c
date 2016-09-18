@@ -18,14 +18,29 @@ extern uint32_t placement_address;
 
 uint8_t initialized = 0;
 
-void initialize_paging() {
-    init_frame_allocator();
+void initialize_paging(uint32_t total_frames) {
+    init_frame_allocator(total_frames);
 
     // Make a page directory for the kernel.
     kernel_directory = (struct page_directory *)e_kmalloc_a(sizeof (struct page_directory));
     memset(kernel_directory, 0, sizeof (struct page_directory));
     current_directory = kernel_directory;
 
+    // Go ahead and allocate all the page tables for the kernel.
+    // This is wasteful, but a lot easier than figuring out how to build
+    // a kernel page allocator.
+    terminal_writestring("Allocating kernel page tables... ");
+    uint32_t i = 0;
+    for(i = 0; i < 0xFFFFFFFF;) {
+        //terminal_putchar('.');
+        get_page(i, 1, kernel_directory);
+        i += 0x1000 * 1024;
+        if(i == 0) {
+            break;
+        }
+    }
+    terminal_writestring("Done\n");
+    
     // We need to identity map (phys addr = virt addr) from
     // 0x0 to the end of used memory, so we can access this
     // transparently, as if paging wasn't enabled.
@@ -36,24 +51,22 @@ void initialize_paging() {
 
     // This is hacky. Probably want to do this some other way.
     // Reaching into kmalloc_early and grabbing placement_address
-    // is not ideal.
-    uint32_t i = 0;
+    // is not ideal.    
     while(i < placement_address)
     {
         // Kernel code is readable but not writeable from userspace.
         alloc_frame( get_page(i, 1, kernel_directory), 0, 0);
         i += 0x1000;
     }
-    // bootstrap the kheap with INITIAL_HEAP_PAGE_COUNT pages.
-    uint32_t kheap_first_page = i;
-    for(i = 0; i < INITIAL_HEAP_PAGE_COUNT; i++) {
-        alloc_frame(get_page(kheap_first_page + (i * 0x1000), 1, kernel_directory), 0, 0);
-    }
-
     // Before we do anything else, disable the original kmalloc so we don't
     // start leaking into the address space.
     uint32_t heap_start = disable_early_kmalloc();
 
+    // bootstrap the kheap with INITIAL_HEAP_PAGE_COUNT pages.
+    for(i = 0; i < INITIAL_HEAP_PAGE_COUNT; i++) {
+        alloc_frame(get_page(heap_start + (i * 0x1000), 1, kernel_directory), 0, 0);
+    }
+    
     // Before we enable paging, we must register our page fault handler.
     register_interrupt_handler(14, page_fault);
 
@@ -62,7 +75,7 @@ void initialize_paging() {
     initialized = 1;
 
     // Set up the kernel heap!
-    initialize_kheap(kheap_first_page);
+    initialize_kheap(heap_start);
 }
 
 void switch_page_directory(struct page_directory *dir)
@@ -95,8 +108,9 @@ struct page *get_page(uint32_t address, int make, struct page_directory *dir)
         }
         else
         {
-            PANIC("kheap kmalloc_ap not implemented yet.");
+            //PANIC("kheap kmalloc_ap not implemented yet.");
             //dir->tables[table_idx] = (struct page_table *)
+            dir->tables[table_idx] = (struct page_table *)kmalloc(sizeof(struct page_table), 1, &tmp);
         }
         memset(dir->tables[table_idx], 0, 0x1000);
         dir->tablesPhysical[table_idx] = tmp | 0x7; // PRESENT, RW, US.
@@ -108,11 +122,25 @@ struct page *get_page(uint32_t address, int make, struct page_directory *dir)
     }
 }
 
-struct page *map_kernel_page(uint32_t address)
+struct page *get_kernel_page(uint32_t address, int make)
 {
-    struct page *p = get_page(address, 1, kernel_directory);
+    return get_page(address, make, kernel_directory);
+}
+
+struct page *map_kernel_page(uint32_t address, int make)
+{
+    struct page *p = get_page(address, make, kernel_directory);
+    if(!p) return NULL;
     alloc_frame(p, 0, 0);
     return p;
+}
+
+void unmap_kernel_page(uint32_t address)
+{
+    struct page *p = get_page(address, 0, kernel_directory);
+    if(p) {
+        free_frame(p);
+    }
 }
 
 void page_fault(registers_t regs)

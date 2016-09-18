@@ -38,7 +38,7 @@ struct page_directory
  * Sets up the environment, page directories etc and
  * enables paging.
  */
-void initialize_paging();
+void initialize_paging(uint32_t total_frames);
 
 /**
  * Causes the specified page directory to be loaded into the
@@ -54,9 +54,19 @@ void switch_page_directory(struct page_directory *new);
 struct page *get_page(uint32_t address, int make, struct page_directory *dir);
 
 /**
+ * Calls get_page with the kernel directory.
+ */
+struct page *get_kernel_page(uint32_t address, int make);
+
+/**
  * Maps a kernel page. Returns NULL if it was unable to map.
  */
-struct page *map_kernel_page(uint32_t address);
+struct page *map_kernel_page(uint32_t address, int make);
+
+/**
+ * Unmaps a page from the kernel and returns its frame to the pool.
+ */
+void unmap_kernel_page(uint32_t address);
 
 /**
  * Handler for page faults.

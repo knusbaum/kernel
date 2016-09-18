@@ -10,19 +10,75 @@
 #define PIT_DATA2 0x42
 #define PIT_COMMAND 0x43
 
-#define MODULO 100
+#define MODULO 10
 
 long long tick = 0;
 uint8_t modcount = 0;
+
+extern uint32_t allocated_frames;
+extern uint32_t total_frames;
+
+#define BUFFSIZE 26
 
 static void timer_callback(registers_t regs)
 {
     modcount = (modcount + 1) % MODULO;
     if(modcount == 0)
     {
+        
         tick++;
-//        terminal_write_dec(tick);
-//        terminal_putchar('\n');
+        // terminal_write_dec(tick);
+        // terminal_putchar('\n');
+        // terminal_set_status("Hello
+
+        // 1  2  3  4  5  6  7  8  9  10 11 12 13 14
+        // F  r  a  m  e  s  :     6  5  5  3  5
+
+        // 15 16 17 18 19 20 21 22 23 24 25 26 27 28
+        // M  e  m  :  x  x  x  x  /  x  x  x  x
+
+        // 29 30 31 32
+        // M  i  B  \0
+        
+        char statusbuffer[BUFFSIZE];
+        int i = 0;
+        for(; i < BUFFSIZE; i++) {
+            statusbuffer[i] = ' ';
+        }
+
+        char *ticks = "Frames: ";
+        i = 0;
+        while(*ticks != 0) {
+            statusbuffer[i++] = *ticks;
+            ticks++;
+        }
+        itos(allocated_frames, statusbuffer + 8, 6);
+        statusbuffer[13] = ' ';
+        
+        char *mem = "Mem: ";
+        i = 14;
+        while(*mem != 0) {
+            statusbuffer[i++] = *mem;
+            mem++;
+        }
+
+        uint32_t used = (allocated_frames * 0x1000) / 1024 / 1024;
+        uint32_t available = (total_frames * 0x1000) / 1024 / 1024;
+        
+        itos(used, statusbuffer + 18, 5);
+        statusbuffer[22] = '/';
+        itos(available, statusbuffer + 23, 5);
+        statusbuffer[27] = ' ';
+        
+        char *mib = "MiB";
+        i = 28;
+        while(*mib != 0) {
+            statusbuffer[i++] = *mib;
+            mib++;
+        }
+        statusbuffer[31] = 0;
+        
+        terminal_set_status(statusbuffer);
     }
 }
 
@@ -47,9 +103,9 @@ void init_timer(uint32_t frequency)
 
       )
     */
-    terminal_writestring("Divisor: ");
-    terminal_write_dec(divisor);
-    terminal_writestring("\n");
+//    terminal_writestring("Divisor: ");
+//    terminal_write_dec(divisor);
+//    terminal_writestring("\n");
 
     outb(PIT_COMMAND, 0x36);
 
@@ -60,5 +116,5 @@ void init_timer(uint32_t frequency)
     outb(PIT_DATA0, low);
     outb(PIT_DATA0, high);
 
-    terminal_writestring("Done setting up PIT\n");
+    //terminal_writestring("Done setting up PIT\n");
 }

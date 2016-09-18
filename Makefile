@@ -18,7 +18,7 @@ OBJECTS=terminal.o \
 	paging.o \
 	kheap.o
 #	interrupt.o
-CFLAGS = -ggdb -m32 -O0 -Wall -Wextra -std=gnu99 -ffreestanding
+CFLAGS = -ggdb -m32 -O0 -Wall -Wextra -std=gnu99 -ffreestanding #-fstack-protector -Wstack-protector
 AFLAGS = --32 -ggdb
 LDFLAGS = $(CFLAGS) -nostdlib -lgcc -Wl,--build-id=none
 

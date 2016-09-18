@@ -52,13 +52,14 @@ _start:
     # To set up a stack, we simply set the esp register to point to the top of
     # our stack (as it grows downwards).
     movl $stack_top, %esp
-
+    
     # We are now ready to actually execute C code. We cannot embed that in an
     # assembly file, so we'll create a kernel.c file in a moment. In that file,
     # we'll create a C entry point called kernel_main and call it here.
     sti
+    pushl %ebx       # EBX contains a pointer to the multiboot info structure.
     call kernel_main
-
+    
     # In case the function returns, we'll want to put the computer into an
     # infinite loop. To do that, we use the clear interrupt ('cli') instruction
     # to disable interrupts, the halt instruction ('hlt') to stop the CPU until

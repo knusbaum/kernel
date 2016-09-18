@@ -9,26 +9,32 @@
 // Only going to have 65536 frames for now. (256 MiB RAM)
 
 // We're going to track free frames in a stack. (array)
-uint16_t stack_count = 0;     // The current capacity of the stack
-uint16_t *free_frames = NULL;
+uint32_t stack_count = 0;     // The current capacity of the stack
+uint32_t *free_frames = NULL;
 int32_t top_of_stack = -1;
 
 // If the stack is empty, we allocate from the end of physical memory.
 // Since we've not allocated any pages, end_of_mem begins at 0.
-uint16_t end_of_mem = 0;
+uint32_t end_of_mem = 0;
 
+uint32_t allocated_frames = 0;
+uint32_t total_frames;
 
-void init_frame_allocator()
+void init_frame_allocator(uint32_t system_frames)
 {
+    total_frames = system_frames;
     if(free_frames != NULL)
     {
         // We've already initialized the frame allocator!
         return;
     }
-    // We might as well use up a full page,
-    // so allocate 4096 bytes (2048 page indecies)
-    free_frames = (uint16_t*)e_kmalloc_a(0x1000);
-    stack_count = 0x1000 / sizeof (uint16_t);
+//    // We might as well use up a full page,
+//    // so allocate 4096 bytes (2048 page indecies)
+//    free_frames = (uint16_t*)e_kmalloc_a(0x1000);
+//    stack_count = 0x1000 / sizeof (uint16_t);
+
+    free_frames = (uint32_t *)e_kmalloc(system_frames * sizeof (uint32_t));
+    stack_count = system_frames;
 }
 
 void alloc_frame(struct page *page, int is_kernel, int is_writeable)
@@ -37,7 +43,8 @@ void alloc_frame(struct page *page, int is_kernel, int is_writeable)
     {
         return; // Frame was already allocated, return straight away.
     }
-    uint16_t idx;
+    allocated_frames++;
+    uint32_t idx;
     if(top_of_stack >= 0)
     {
         // There are free frames in the stack!
@@ -48,6 +55,11 @@ void alloc_frame(struct page *page, int is_kernel, int is_writeable)
     {
         // Otherwise, there were no free frames on the stack.
         // Grab one from the end of memory.
+        if(end_of_mem >= total_frames) {
+            // There are no free frames in the frame stack
+            // and we're at the limit of our 256 MiB.
+            PANIC("Cannot alloc frame. Out of memory!");
+        }
         idx = end_of_mem;
         end_of_mem++;
 
@@ -69,8 +81,15 @@ void free_frame(struct page *page)
         // is implemented. If this happens before the kheap is
         // initialized, the kernel should panic.
         // For now, we just panic.
-        PANIC("Out of frames!");
+        PANIC("Frame pool is full!");
     }
+//    terminal_writestring("Adding frame: ");
+//    terminal_write_hex(page->frame << 12);
+//    terminal_writestring(" to pool.\n");
+
+
+
     free_frames[top_of_stack] = (uint16_t)(page->frame & 0xFFFF); // only 65536 pages (for now)
     page->frame = 0x0;
+    allocated_frames--;
 }

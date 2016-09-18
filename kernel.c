@@ -29,10 +29,56 @@
 extern "C" /* Use C linkage for kernel_main. */
 #endif
 
-void kernel_main()
+//! The symbol table for a.out format.
+typedef struct {
+    unsigned long tab_size;
+    unsigned long str_size;
+    unsigned long address;
+    unsigned long reserved;
+} aout_symbol_table_t;
+
+//! The section header table for ELF format.
+typedef struct {
+    unsigned long num;
+    unsigned long size;
+    unsigned long address;
+    unsigned long shndx;
+} elf_section_header_table_t;
+
+struct multiboot_info
 {
-    terminal_initialize(make_color(COLOR_BLUE, COLOR_WHITE));
-    terminal_writestring("Hello, kernel World!\nHello, Again!\n");
+    unsigned long flags;
+    unsigned long mem_lower;
+    unsigned long mem_upper;
+    unsigned long boot_device;
+    unsigned long cmdline;
+    unsigned long mods_addr;
+    union
+    {
+        aout_symbol_table_t aout_sym_t;
+        elf_section_header_table_t elf_sec_t;
+    } u;
+    unsigned long mmap_length;
+    unsigned long mmap_addr;
+};
+
+
+//extern uint32_t allocated_frames;
+
+void kernel_main(struct multiboot_info *mi)
+{
+    terminal_initialize(make_color(COLOR_DARK_GREY, COLOR_WHITE));
+    terminal_set_status_color(make_color(COLOR_WHITE, COLOR_BLACK));
+    //terminal_writestring("Hello, kernel World!\nHello, Again!\n");
+    terminal_writestring("Booting kernel.\n");
+    terminal_writestring("Have: ");
+    terminal_write_dec(mi->mem_upper * 1024);
+    terminal_writestring(" bytes of memory above 1MiB.\n");
+
+    uint32_t low_pages = 256; // 1024 * 1024 bytes / 4096
+    uint32_t high_pages = (mi->mem_upper * 1024) / 4096;
+
+    uint32_t total_frames = high_pages + low_pages;
 
     init_gdt();
 
@@ -41,50 +87,43 @@ void kernel_main()
 
     init_timer(100);
 
-    initialize_paging();
-    terminal_writestring("\nDone setting up paging.\n");
+    initialize_paging(total_frames);
+    // There are some spinwaits in here for cinematic effect.
+    // Just because it's fun to watch it do stuff.
+    int i;
+    for(i = 0; i < 0x0FFFFFFF; i++){}
     malloc_stats();
+    terminal_writestring("Done setting up paging.\nKernel is ready to go!!!\n\n");
+    for(i = 0; i < 0x0FFFFFFF; i++){}
+    // Kernel ready to go!
 
-    terminal_settextcolor(make_color(COLOR_WHITE, COLOR_BLACK));
+    terminal_settextcolor(make_color(COLOR_BLUE, COLOR_WHITE));
 
+    struct page_directory newdir;
+    memset(&newdir, 0, sizeof newdir);
+    terminal_writestring("Allocating a page for a new page directory!\n");
+    struct page *p = get_page(0x0, 1, &newdir);
+    terminal_writestring("Done. Freeing it.\n\n");
+    kfree(p);
 
-    terminal_writestring("Performing allocations.\n");
-    void *ptrs[300];
-    int i = 0;
-    for(i = 0; i < 300; i++) {
-        ptrs[i] = kmalloc(1, 0, 0);
-//        terminal_write_dec(i);
-//        terminal_writestring(" ");
-//        terminal_write_hex((uint32_t)x);
-//        terminal_putchar('\n');
+    terminal_writestring("Allocating a bunch of kheap!\n");
+    void *ptrs2[4096];
+    for(i = 0; i < 4096; i++) {
+        ptrs2[i] = kmalloc(4096 * 10, 0, 0);
+        int j;
+        for(j = 0; j < 0x000FFFFF; j++) {}
+    };
+
+    terminal_writestring("Done!\n");
+    malloc_stats();
+    for(i = 0; i < 0x00FFFFFF; i++){}
+    terminal_writestring("Freeing!\n");
+
+    for(i = 4095; i >= 0; i--) {
+        kfree(ptrs2[i]);
+        int j;
+        for(j = 0; j < 0x000FFFFF; j++) {}
     }
-    terminal_writestring("Done.\n");
     malloc_stats();
-    terminal_writestring("Freeing.\n");
-    for(i = 0; i < 300; i++) {
-        kfree(ptrs[i]);
-    }
-    terminal_writestring("Done.\n");
-    malloc_stats();
-
-    terminal_writestring("Kmallocing page-aligned.\n");
-    void *x = kmalloc(1, 1, 0);
-    terminal_writestring("addr: ");
-    terminal_write_hex((uint32_t)x);
-    terminal_putchar('\n');
-
-    x = kmalloc(1, 1, 0);
-    terminal_writestring("addr: ");
-    terminal_write_hex((uint32_t)x);
-    terminal_putchar('\n');
-
-    x = kmalloc(1, 1, 0);
-    terminal_writestring("addr: ");
-    terminal_write_hex((uint32_t)x);
-    terminal_putchar('\n');
-
-    x = kmalloc(1, 1, 0);
-    terminal_writestring("addr: ");
-    terminal_write_hex((uint32_t)x);
-    terminal_putchar('\n');
+    terminal_writestring("Done. Halting.\n");
 }
