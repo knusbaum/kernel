@@ -29,6 +29,7 @@ char *memend; // memend MUST always be page aligned.
 struct free_header *head;
 
 uint32_t allocations = 0;
+uint32_t heap_free = 0;
 
 static void do_kfree(void *p);
 
@@ -137,6 +138,7 @@ void initialize_kheap(uint32_t start_addr) {
     head = (struct free_header *)memhead;
     head->next = NULL;
     head->prev = NULL;
+    heap_free = head->h.size;
 }
 
 static struct free_header *find_block_with_page_aligned_addr(uint32_t needed_size) {
@@ -290,6 +292,7 @@ void *kmalloc(uint32_t size, uint8_t align, uint32_t *phys) {
 
     // We have oficcially made an allocation.
     allocations++;
+    heap_free -= block->h.size;
 
     char *return_addr = ((char *)block) + sizeof (struct header);
     if(phys) {
@@ -332,6 +335,7 @@ static void do_kfree(void *p) {
 
     struct free_header *block_header = (struct free_header *)(((char *)p) - sizeof (struct header));
     block_header->h.free = 1;
+    heap_free += block_header->h.size;
 
     struct free_header *prev_block = get_previous_block((struct header *)block_header);
     struct free_header *next_block = get_next_block((struct header *)block_header);

@@ -17,8 +17,9 @@ uint8_t modcount = 0;
 
 extern uint32_t allocated_frames;
 extern uint32_t total_frames;
+extern uint32_t heap_free;
 
-#define BUFFSIZE 37
+#define BUFFSIZE 59
 
 static void timer_callback(registers_t regs)
 {
@@ -37,7 +38,13 @@ static void timer_callback(registers_t regs)
         // M  e  m  :  x  x  x  x  /  x  x  x  x
 
         // 34 35 36 37
-        // M  i  B  \0
+        // M  i  B
+
+        // 38 39 40 41 42 43 44 45 46 47 48
+        // H  e  a  p  -  F  r  e  e  :
+
+        // 49 50 51 52 53 54 55 56 57 58 59
+        // 1  2  3  4  5  6  7  8  9  10 \0
 
         char statusbuffer[BUFFSIZE];
         int i = 0;
@@ -75,7 +82,16 @@ static void timer_callback(registers_t regs)
             statusbuffer[i++] = *mib;
             mib++;
         }
-        statusbuffer[36] = 0;
+        statusbuffer[36] = ' ';
+
+        char *heapfree = "Heap-Free:";
+        i = 37;
+        while(*heapfree != 0) {
+            statusbuffer[i++] = *heapfree;
+            heapfree++;
+        }
+        statusbuffer[47] = ' ';
+        itos(heap_free, statusbuffer + 48, 11);
 
         terminal_set_status(statusbuffer);
     }
