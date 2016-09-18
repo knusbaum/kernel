@@ -49,8 +49,25 @@ void kernel_main(struct multiboot_info *mi)
     terminal_writestring("Done setting up paging.\nKernel is ready to go!!!\n\n");
     terminal_settextcolor(make_color(COLOR_BLUE, COLOR_WHITE));
     // Kernel ready to go!
-    int i;
+    int i = 0;
 
+    for(i = 0; i < 0x0FFFFFFF; i++){}
+    terminal_writestring("Allocating.\n");
+
+    uint32_t alloc_count = 5100000;
+    void **ptrs = kmalloc(alloc_count * sizeof (void *), 0, 0);
+
+    for(i = 0; i < alloc_count; i++) {
+        ptrs[i] = kmalloc(512, 0, 0);
+    }
+
+    for(i = 0; i < 0x0FFFFFFF; i++){}
+    terminal_writestring("Freeing.\n");
+
+    for(i = alloc_count-1; i >= 0; i--) {
+        kfree(ptrs[i]);
+    }
+    kfree(ptrs);
 
     // Spinloop to allow status to converge before halt.
     for(i = 0; i < 0x0FFFFFFF; i++){}

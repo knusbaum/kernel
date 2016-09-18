@@ -10,10 +10,12 @@
 #define PIT_DATA2 0x42
 #define PIT_COMMAND 0x43
 
-#define MODULO 10
+#define DRAW_MODULO 10
+uint8_t draw_modcount = 0;
+
+uint8_t normal_color;
 
 long long tick = 0;
-uint8_t modcount = 0;
 
 extern uint32_t allocated_frames;
 extern uint32_t total_frames;
@@ -23,8 +25,9 @@ extern uint32_t heap_free;
 
 static void timer_callback(registers_t regs)
 {
-    modcount = (modcount + 1) % MODULO;
-    if(modcount == 0)
+    draw_modcount = (draw_modcount + 1) % DRAW_MODULO;
+
+    if(draw_modcount == 0)
     {
         tick++;
 
@@ -71,6 +74,13 @@ static void timer_callback(registers_t regs)
         uint32_t used = (allocated_frames * 0x1000) / 1024 / 1024;
         uint32_t available = (total_frames * 0x1000) / 1024 / 1024;
 
+        if(available - used < 512) {
+            terminal_set_status_color(make_color(COLOR_BLACK, COLOR_RED));
+        }
+        else {
+            terminal_set_status_color(normal_color);
+        }
+
         itos(used, statusbuffer + 23, 5);
         statusbuffer[27] = '/';
         itos(available, statusbuffer + 28, 5);
@@ -82,6 +92,7 @@ static void timer_callback(registers_t regs)
             statusbuffer[i++] = *mib;
             mib++;
         }
+
         statusbuffer[36] = ' ';
 
         char *heapfree = "Heap-Free:";
@@ -101,6 +112,8 @@ void init_timer(uint32_t frequency)
 {
     terminal_writestring("Initializing PIT timer\n");
     register_interrupt_handler(IRQ0, &timer_callback);
+
+    normal_color = make_color(COLOR_WHITE, COLOR_BLACK);
 
     uint32_t divisor;
     if(frequency)
