@@ -446,6 +446,7 @@ static int unmap_blocks() {
     // We can free a page!
     uint32_t newsize = h->size - 0x1000;
     memend -= 0x1000;
+    heap_free -= 0x1000;
     set_header_footer((char *)h, newsize);
     unmap_kernel_page((uint32_t)memend);
     return 1;
