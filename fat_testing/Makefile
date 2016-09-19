@@ -1,0 +1,2 @@
+all:
+	cc -ggdb *.c
