@@ -51,7 +51,7 @@ int main(void) {
     print_directory(fs, &dir);
 
     uint32_t bufflen = 24;
-    
+
     char buffer[bufflen + 1];
     while(1) {
         printf("SELECT NUMBER: ");
@@ -60,6 +60,8 @@ int main(void) {
             int c = fgetc(stdin);
             if(c == EOF) {
                 printf("\nDone!\n");
+                free_directory(fs, &dir);
+                destroyFilesystem(fs);
                 exit(0);
             }
             buffer[i] = c;
@@ -78,14 +80,14 @@ int main(void) {
             print_directory(fs, &dir);
             continue;
         }
-        
+
         int x;
         int scanned = sscanf(buffer, "%u", &x);
         if(scanned == 0) {
             printf("Invalid input. Enter a number.\n");
             continue;
         }
-        
+
         if(dir.num_entries <= x) {
             printf("Invalid selection.\n");
             continue;
@@ -105,30 +107,7 @@ int main(void) {
             for(i = 0; i < dir.entries[x].file_size; i++) {
                 putchar(file[i]);
             }
+            free(file);
         }
-        
     }
-    
-
-    uint32_t subdir_no = 3;
-    printf("\n\nReading subdirectory. first cluster: %u\n", dir.entries[subdir_no].first_cluster);
-    struct directory subdir;
-    populate_dir(fs, &subdir, dir.entries[subdir_no].first_cluster);
-    printf("Done reading subdirectory.\n");
-
-    print_directory(fs, &subdir);
-//    for(i = 0; i < subdir.num_entries; i++) {
-//        printf("[%d] %-12s %c %8d bytes first cluster: %u\n", i, subdir.entries[i].dir_name, subdir.entries[i].dir_attrs & DIRECTORY?'D':' ', subdir.entries[i].file_size, subdir.entries[i].first_cluster);
-//    }
-
-
-//    uint32_t file_id_to_read = 0;
-//    printf("\n\nGoing to read a file!\n");
-//    char *file = readFile(fs, &dir.entries[file_id_to_read]);
-//    for(i = 0; i < dir.entries[file_id_to_read].file_size; i++) {
-//        putchar(file[i]);
-//    }
-
-
-    destroyFilesystem(fs);
 }

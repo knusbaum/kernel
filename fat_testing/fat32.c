@@ -4,6 +4,7 @@
 #include <memory.h>
 #include <strings.h>
 #include <errno.h>
+#include <ctype.h>
 #include "fat32.h"
 
 int x;
@@ -15,7 +16,7 @@ struct f32 {
     uint32_t partition_begin_sector;
     uint32_t fat_begin_sector;
     uint32_t cluster_begin_sector;
-    uint32_t cluster_size;    
+    uint32_t cluster_size;
 };
 
 static void read_bpb(f32 *fs, struct bios_parameter_block *bpb);
@@ -41,7 +42,7 @@ f32 *makeFilesystem(char *fatSystem) {
         free(fs);
         return NULL;
     }
-    
+
     fs->partition_begin_sector = 0;
     fs->fat_begin_sector = fs->partition_begin_sector + fs->bpb.reserved_sectors;
     fs->cluster_begin_sector = fs->fat_begin_sector + (fs->bpb.FAT_count * fs->bpb.count_sectors_per_FAT32);
@@ -186,16 +187,59 @@ void populate_root_dir(f32 *fs, struct directory *dir) {
     populate_dir(fs, dir, 2);
 }
 
+char *parse_long_name(char (*LFN_entries)[32], uint8_t entry_count) {
+    // each entry can hold 13 characters.
+    char *name = malloc(entry_count * 13);
+    int i, j;
+    for(i = 0; i < entry_count; i++) {
+        char *entry = LFN_entries[i];
+        uint8_t entry_no = (unsigned char)entry[0] & 0x0F;
+        char *name_offset = name + ((entry_no - 1) * 13);
+
+        for(j = 1; j < 10; j+=2) {
+            if(entry[j] >= 32 && entry[j] <= 127) {
+                *name_offset = entry[j];
+            }
+            else {
+                *name_offset = 0;
+            }
+            name_offset++;
+        }
+        for(j = 14; j < 25; j+=2) {
+            if(entry[j] >= 32 && entry[j] <= 127) {
+                *name_offset = entry[j];
+            }
+            else {
+                *name_offset = 0;
+            }
+            name_offset++;
+        }
+        for(j = 28; j < 31; j+=2) {
+            if(entry[j] >= 32 && entry[j] <= 127) {
+                *name_offset = entry[j];
+            }
+            else {
+                *name_offset = 0;
+            }
+            name_offset++;
+        }
+    }
+    return name;
+}
+
 void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
     uint32_t dirs_per_cluster = fs->cluster_size / 32;
     uint32_t max_dirs = 0;
-    dir->entries = 0; 
+    dir->entries = 0;
     uint32_t entry_count = 0;
-    
+
+    uint8_t currLFN = 0;
+    char LFN_entries[10][32];
+
     while(1) {
         max_dirs += dirs_per_cluster;
         dir->entries = realloc(dir->entries, max_dirs * sizeof (struct dir_entry));
-        
+
         char *root_cluster = getCluster(fs, cluster);
 
         uint32_t i;
@@ -207,13 +251,15 @@ void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
                 // or it has been deleted.
                 continue;
             }
-            
+
             uint8_t attrs = entry[11];
             if(attrs == LFN) {
                 // We'll add long-filename support later.
+                memcpy(LFN_entries[currLFN], entry, 32);
+                currLFN++;
                 continue;
             }
-            
+
             memcpy(dir->entries[entry_count].dir_name, entry, 11);
             dir->entries[entry_count].dir_name[11] = 0;
             dir->entries[entry_count].dir_attrs = attrs;
@@ -221,23 +267,31 @@ void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
             uint16_t first_cluster_low = readi16(entry, 26);
             dir->entries[entry_count].first_cluster = first_cluster_high << 16 | first_cluster_low;
             dir->entries[entry_count].file_size = readi32(entry, 28);
-            
-            // Trim up the filename.
-            char extension[4];
-            memcpy(extension, dir->entries[entry_count].dir_name + 8, 3);
-            extension[3] = 0;
-            trim_spaces(extension, 3);
 
-            dir->entries[entry_count].dir_name[8] = 0;
-            trim_spaces(dir->entries[entry_count].dir_name, 8);
+            if(currLFN > 0) {
+                dir->entries[entry_count].name = parse_long_name(LFN_entries, currLFN);
+            }
+            else {
+                // Trim up the short filename.
+                char extension[4];
+                memcpy(extension, dir->entries[entry_count].dir_name + 8, 3);
+                extension[3] = 0;
+                trim_spaces(extension, 3);
 
-            if(strlen(extension) > 0) {
-                uint32_t len = strlen(dir->entries[entry_count].dir_name);
-                dir->entries[entry_count].dir_name[len++] = '.';
-                memcpy(dir->entries[entry_count].dir_name + len, extension, 4);
+                dir->entries[entry_count].dir_name[8] = 0;
+                trim_spaces(dir->entries[entry_count].dir_name, 8);
+
+                if(strlen(extension) > 0) {
+                    uint32_t len = strlen(dir->entries[entry_count].dir_name);
+                    dir->entries[entry_count].dir_name[len++] = '.';
+                    memcpy(dir->entries[entry_count].dir_name + len, extension, 4);
+                }
+                dir->entries[entry_count].name = dir->entries[entry_count].dir_name;
             }
             entry_count++;
+            currLFN = 0;
         }
+
         dir->num_entries = entry_count;
         free(root_cluster);
         cluster = get_next_cluster_id(fs, cluster);
@@ -246,6 +300,11 @@ void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
 }
 
 void free_directory(f32 *fs, struct directory *dir){
+    int i;
+    for(i = 0; i < dir->num_entries; i++) {
+        if(dir->entries[i].name != dir->entries[i].dir_name)
+            free(dir->entries[i].name);
+    }
     free(dir->entries);
 }
 
@@ -259,12 +318,13 @@ char *readFile(f32 *fs, struct dir_entry *dirent) {
 
         uint32_t remaining = dirent->file_size - copiedbytes;
         uint32_t to_copy = remaining > fs->cluster_size ? fs->cluster_size : remaining;
-        
+
         memcpy(filecurrptr, cbytes, to_copy);
+        free(cbytes);
 
         filecurrptr += fs->cluster_size;
         copiedbytes += to_copy;
-        
+
         cluster = get_next_cluster_id(fs, cluster);
         if(cluster >= 0x0FFFFFF8) break;
     }
@@ -273,10 +333,17 @@ char *readFile(f32 *fs, struct dir_entry *dirent) {
 
 void print_directory(f32 *fs, struct directory *dir) {
     uint32_t i;
+    int32_t max_name = 0;
     for(i = 0; i < dir->num_entries; i++) {
-        printf("[%d] %-12s %c %8d bytes ",
+        int32_t namelen = strlen(dir->entries[i].name);
+        max_name = namelen > max_name ? namelen : max_name;
+    }
+
+    for(i = 0; i < dir->num_entries; i++) {
+        printf("[%d] %*s %c %8d bytes ",
                i,
-               dir->entries[i].dir_name,
+               -max_name,
+               dir->entries[i].name,
                dir->entries[i].dir_attrs & DIRECTORY?'D':' ',
                dir->entries[i].file_size, dir->entries[i].first_cluster);
         uint32_t cluster = dir->entries[i].first_cluster;

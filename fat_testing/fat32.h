@@ -38,6 +38,7 @@ struct bios_parameter_block {
 
 struct dir_entry {
     char dir_name[13]; // 11 standard chars plus one . plus \0
+    char *name;
     uint8_t dir_attrs;
     uint32_t first_cluster;
     uint32_t file_size;
