@@ -171,11 +171,11 @@ static uint32_t sector_for_cluster(f32 *fs, uint32_t cluster) {
 }
 
 // CLUSTER NUMBERS START AT 2 (for some reason...)
-char *getCluster(f32 *fs, uint32_t cluster_number) {
+char *getCluster(f32 *fs, char *buff, uint32_t cluster_number) {
     uint32_t sector = sector_for_cluster(fs, cluster_number);
     uint32_t sector_count = fs->bpb.sectors_per_cluster;
-    char *buffer = malloc(sector_count * 512);
-    getSector(fs, buffer, sector, sector_count);
+    //char *buffer = malloc(sector_count * 512);
+    getSector(fs, buff, sector, sector_count);
     return buffer;
 }
 
@@ -228,6 +228,7 @@ char *parse_long_name(char (*LFN_entries)[32], uint8_t entry_count) {
 }
 
 void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
+    dir->cluster = cluster;
     uint32_t dirs_per_cluster = fs->cluster_size / 32;
     uint32_t max_dirs = 0;
     dir->entries = 0;
@@ -239,11 +240,11 @@ void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
     while(1) {
         max_dirs += dirs_per_cluster;
         dir->entries = realloc(dir->entries, max_dirs * sizeof (struct dir_entry));
-
-        char *root_cluster = getCluster(fs, cluster);
+        char root_cluster[fs->cluster_size];
+        getCluster(fs, root_cluster, cluster);
 
         uint32_t i;
-        for(i = 0; i < max_dirs; i++) {
+        for(i = 0; i < dirs_per_cluster; i++) {
             char *entry = root_cluster + (i * 32); // Shift by i 32-byte records.
             unsigned char first_byte = *entry;
             if(first_byte == 0x00 || first_byte == 0xE5) {
@@ -293,7 +294,6 @@ void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
         }
 
         dir->num_entries = entry_count;
-        free(root_cluster);
         cluster = get_next_cluster_id(fs, cluster);
         if(cluster >= 0x0FFFFFF8) break;
     }
@@ -314,13 +314,13 @@ char *readFile(f32 *fs, struct dir_entry *dirent) {
     uint32_t cluster = dirent->first_cluster;
     uint32_t copiedbytes = 0;
     while(1) {
-        char *cbytes = getCluster(fs, cluster);
+        char cbytes[fs->cluster_size];
+        getCluster(fs, cbytes, cluster);
 
         uint32_t remaining = dirent->file_size - copiedbytes;
         uint32_t to_copy = remaining > fs->cluster_size ? fs->cluster_size : remaining;
 
         memcpy(filecurrptr, cbytes, to_copy);
-        free(cbytes);
 
         filecurrptr += fs->cluster_size;
         copiedbytes += to_copy;
@@ -331,6 +331,61 @@ char *readFile(f32 *fs, struct dir_entry *dirent) {
     return file;
 }
 
+uint32_t allocateCluster(f32 *fs) {
+    uint32_t i, ints_per_fat = (512 * fs->bpb.count_sectors_per_FAT32) / 4;
+    for(i = 0; i < ints_per_fat; i++) {
+        if(fs->FAT[i] == 0) {
+            fs->FAT[i] = 0x0FFFFFFF;
+            return i;
+        }
+    }
+    return 0;
+}
+
+int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t flen) {
+    uint32_t dirs_per_cluster = fs->cluster_size / 32;
+    uint32_t required_clusters = flen / fs->cluster_size;
+    // One for the traditional 8.3 name, one for each 13 charaters in the extended name.
+    // Int division truncates, so if there's a remainder from length / 13, add another entry.
+    uint32_t required_entries_long_fname = 1 + (strlen(fname) / 13) + (strlen(fname) % 13 == 0 ? 0 : 1);
+
+    int index = -1;
+    char root_cluster[fs->cluster_size];
+    while(1) {
+        getCluster(fs, root_cluster, cluster);
+        
+        int i, in_a_row = 0;
+        for(i = 0; i < dirs_per_cluster; i++) {
+            if(first_byte == 0x00 || first_byte == 0xE5) {
+                in_a_row++;
+            }
+            else {
+                in_a_row = 0;
+            }
+            
+            if(in_a_row == required_entries_long_fname) {
+                index = i - (in_a_row - 1);
+                break;
+            }
+        }
+        if(index >= 0) {
+            // We found a spot to put our crap!
+            break;
+        }
+        uint32_t next_cluster = fs->FAT[cluster];
+        if(next_cluster >= 0x0FFFFFF8) {
+            printf("We're out of space and there are no more clusters. We need to expand!\n");
+            next_cluster = allocateCluster(fs);
+            if(!next_cluster) {
+                printf("Failed to allocate cluster. Disk full.\n");
+                return 0;
+            }
+            fs->FAT[cluster] = next_cluster;
+            cluster = next_cluster;
+        }
+    }
+}
+    
 void print_directory(f32 *fs, struct directory *dir) {
     uint32_t i;
     int32_t max_name = 0;

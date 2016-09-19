@@ -45,6 +45,7 @@ struct dir_entry {
 };
 
 struct directory {
+    uint32_t cluster;
     struct dir_entry *entries;
     uint32_t num_entries;
 };
@@ -57,7 +58,7 @@ void destroyFilesystem(f32 *fs);
 const struct bios_parameter_block *getBPB(f32 *fs);
 
 void getSector(f32 *fs, char *buff, uint32_t sector, uint32_t count);
-char *getCluster(f32 *fs, uint32_t cluster_number);
+char *getCluster(f32 *fs, char *buff, uint32_t cluster_number);
 
 uint16_t readi16(char *buff, size_t offset);
 uint32_t readi32(char *buff, size_t offset);
