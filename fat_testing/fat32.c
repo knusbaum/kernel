@@ -52,7 +52,7 @@ f32 *makeFilesystem(char *fatSystem) {
     fs->FAT = malloc(bytes_per_fat);
     int sector_i;
     for(sector_i = 0; sector_i < fs->bpb.count_sectors_per_FAT32; sector_i++) {
-        char *sector = getSector(fs, fs->fat_begin_sector + sector_i);
+        char *sector = getSector(fs, fs->fat_begin_sector + sector_i, 1);
         int integer_j;
         for(integer_j = 0; integer_j < 512; integer_j++) {
             fs->FAT[sector_i * (512 / 4) + integer_j]
@@ -70,13 +70,17 @@ void destroyFilesystem(f32 *fs) {
     free(fs);
 }
 
-char *getSector(f32 *fs, uint32_t sector) {
-    char *buff = malloc(512); // sector is 512 bytes.
+char *getSector(f32 *fs, uint32_t sector, uint32_t count) {
+    uint32_t readbytes = count * 512;
+    char *buff = malloc(readbytes); // sector is 512 bytes.
     fseek(fs->f, sector * 512, SEEK_SET);
     int readcount = 0;
-    while(readcount < 512) {
-        readcount += fread(buff + readcount, 512 - readcount, 1, fs->f);
-        if(feof) break;
+    while(readcount < readbytes) {
+        if(feof(fs->f) || ferror(fs->f)) {
+            free(buff);
+            return NULL;
+        }
+        readcount += fread(buff + readcount, 1, readbytes - readcount, fs->f);
     }
     return buff;
 }
@@ -128,7 +132,7 @@ uint32_t readi32(char *buff, size_t offset) {
  */
 
 static void read_bpb(f32 *fs, struct bios_parameter_block *bpb) {
-    char *sector0 = getSector(fs, 0);
+    char *sector0 = getSector(fs, 0, 1);
 
     bpb->bytes_per_sector = readi16(sector0, 11);;
     bpb->sectors_per_cluster = sector0[13];
@@ -169,28 +173,9 @@ static uint32_t sector_for_cluster(f32 *fs, uint32_t cluster) {
 
 // CLUSTER NUMBERS START AT 2 (for some reason...)
 char *getCluster(f32 *fs, uint32_t cluster_number) {
-    //printf("cluster number: 0x%08x [%u]\n", cluster_number, cluster_number);
     uint32_t sector = sector_for_cluster(fs, cluster_number);
-    //printf("sector: 0x%08x [%u]\n", sector, sector);
-    uint32_t desired_amount = fs->cluster_size;
-
-    char *buff = malloc(desired_amount);
-    //printf("File offset: 0x%08x [%u]\n", sector * 512, sector * 512);
-    fseek(fs->f, sector * 512, SEEK_SET);
-    int readcount = 0;
-    while(readcount < desired_amount) {
-        readcount += fread(buff + readcount, 1, desired_amount - readcount, fs->f);
-        if(feof(fs->f)) {
-            printf("Error. found end of file.\n");
-            exit(1);
-        }
-        else if(ferror(fs->f)) {
-            printf("ERROR!");
-            perror("Error reading file!");
-            exit(1);
-        }
-    }
-    return buff;
+    uint32_t sector_count = fs->bpb.sectors_per_cluster;
+    return getSector(fs, sector, sector_count);
 }
 
 uint32_t get_next_cluster_id(f32 *fs, uint32_t cluster) {
@@ -208,7 +193,6 @@ void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
     uint32_t entry_count = 0;
     
     while(1) {
-        //printf("Loading cluster %u\n", cluster);
         max_dirs += dirs_per_cluster;
         dir->entries = realloc(dir->entries, max_dirs * sizeof (struct dir_entry));
         
@@ -235,10 +219,7 @@ void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
             dir->entries[entry_count].dir_attrs = attrs;
             uint16_t first_cluster_high = readi16(entry, 20);
             uint16_t first_cluster_low = readi16(entry, 26);
-//            printf("bits low: %x, bits high: %x\n", first_cluster_low, first_cluster_high);
             dir->entries[entry_count].first_cluster = first_cluster_high << 16 | first_cluster_low;
-//            dir->entries[entry_count].first_cluster_high = readi16(entry, 20);
-//            dir->entries[entry_count].first_cluster_low = readi16(entry, 26);
             dir->entries[entry_count].file_size = readi32(entry, 28);
             
             // Trim up the filename.
@@ -255,31 +236,6 @@ void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
                 dir->entries[entry_count].dir_name[len++] = '.';
                 memcpy(dir->entries[entry_count].dir_name + len, extension, 4);
             }
-//            
-//
-//            trim_spaces(dir->entries[entry_count].dir_name, 8);
-//            trim_spaces(dir->entries[entry_count].dir_name + 8, 3);
-//            uint8_t last_char = strlen(dir->entries[entry_count].dir_name);
-//            
-//            if(last_char == 11) {
-//                // The filename is full.
-//                int i;
-//                for(i = 11; i > 8; i--) {
-//                    dir->entries[entry_count].dir_name[i] = dir->entries[entry_count].dir_name[i-1];
-//                }
-//                dir->entries[entry_count].dir_name[8] = '.';
-//            }
-//            else if(strlen(dir->entries[entry_count].dir_name + 8)) {
-//                dir->entries[entry_count].dir_name[last_char] = '.';
-//                last_char++;
-//                int i;
-//                for(i = 0; i < 3; i++) {
-//                    dir->entries[entry_count].dir_name[last_char + i]
-//                        = dir->entries[entry_count].dir_name[8 + i];
-//                }
-//                dir->entries[entry_count].dir_name[last_char + i] = 0;
-//            }
-            
             entry_count++;
         }
         dir->num_entries = entry_count;
@@ -294,13 +250,11 @@ void free_directory(f32 *fs, struct directory *dir){
 }
 
 char *readFile(f32 *fs, struct dir_entry *dirent) {
-    //printf("Reading file!\n");
     char *file = malloc(dirent->file_size);
     char *filecurrptr = file;
     uint32_t cluster = dirent->first_cluster;
     uint32_t copiedbytes = 0;
     while(1) {
-        //printf("Getting cluster %u\n", cluster);
         char *cbytes = getCluster(fs, cluster);
 
         uint32_t remaining = dirent->file_size - copiedbytes;
@@ -320,7 +274,7 @@ char *readFile(f32 *fs, struct dir_entry *dirent) {
 void print_directory(f32 *fs, struct directory *dir) {
     uint32_t i;
     for(i = 0; i < dir->num_entries; i++) {
-        printf("[%d] %-12s %c %8d bytes ", //first cluster: %u",
+        printf("[%d] %-12s %c %8d bytes ",
                i,
                dir->entries[i].dir_name,
                dir->entries[i].dir_attrs & DIRECTORY?'D':' ',
@@ -329,9 +283,7 @@ void print_directory(f32 *fs, struct directory *dir) {
         uint32_t cluster_count = 1;
         while(1) {
             cluster = fs->FAT[cluster];
-            //printf(" %u", cluster);
             if(cluster >= 0x0FFFFFF8) break;
-            //if(cluster == 0) break;
             cluster_count++;
         }
         printf("clusters: [%u]\n", cluster_count);

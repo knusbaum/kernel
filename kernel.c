@@ -22,6 +22,8 @@
 extern "C" /* Use C linkage for kernel_main. */
 #endif
 
+extern char _binary_f32_disk_start;
+
 void kernel_main(struct multiboot_info *mi)
 {
     terminal_initialize(make_color(COLOR_DARK_GREY, COLOR_WHITE));
@@ -50,7 +52,6 @@ void kernel_main(struct multiboot_info *mi)
     terminal_settextcolor(make_color(COLOR_BLUE, COLOR_WHITE));
     // Kernel ready to go!
     int i = 0;
-
 
 
     // Spinloop to allow status to converge before halt.
