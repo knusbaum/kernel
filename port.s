@@ -2,6 +2,7 @@
 .global outb
 .global inb
 .global inw
+.global insl
 
 .type outb, @function
     # void outb(uint16_t port, uint8_t value)
@@ -33,3 +34,26 @@ inw:
     inw	%dx, %ax
     ret
 .size inw, . - inw
+
+.type insl, @function
+    # void insl(uint16_t port, void *addr, unsigned int count)
+insl:
+    pushl   %edi
+    movl    8(%esp), %edx  # port
+    movl    12(%esp), %edi # addr
+    movl    16(%esp), %ecx # count
+
+    xorl    %eax, %eax
+.startLoop:
+    cmpl    %eax, %ecx
+    je      .end
+
+    insl
+
+    addl    $4, %edi
+    incl    %eax
+    jmp     .startLoop
+
+.end:
+    popl    %edi
+    ret
