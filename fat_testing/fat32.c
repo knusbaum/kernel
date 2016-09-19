@@ -53,13 +53,13 @@ f32 *makeFilesystem(char *fatSystem) {
     fs->FAT = malloc(bytes_per_fat);
     int sector_i;
     for(sector_i = 0; sector_i < fs->bpb.count_sectors_per_FAT32; sector_i++) {
-        char *sector = getSector(fs, fs->fat_begin_sector + sector_i, 1);
+        char sector[512];
+        getSector(fs, sector, fs->fat_begin_sector + sector_i, 1);
         int integer_j;
-        for(integer_j = 0; integer_j < 512; integer_j++) {
+        for(integer_j = 0; integer_j < 512/4; integer_j++) {
             fs->FAT[sector_i * (512 / 4) + integer_j]
                 = readi32(sector, integer_j * 4);
         }
-        free(sector);
     }
     return fs;
 }
@@ -71,19 +71,17 @@ void destroyFilesystem(f32 *fs) {
     free(fs);
 }
 
-char *getSector(f32 *fs, uint32_t sector, uint32_t count) {
+void getSector(f32 *fs, char *buff, uint32_t sector, uint32_t count) {
     uint32_t readbytes = count * 512;
-    char *buff = malloc(readbytes); // sector is 512 bytes.
+    //char *buff = malloc(readbytes); // sector is 512 bytes.
     fseek(fs->f, sector * 512, SEEK_SET);
     int readcount = 0;
     while(readcount < readbytes) {
         if(feof(fs->f) || ferror(fs->f)) {
-            free(buff);
-            return NULL;
+            return;
         }
         readcount += fread(buff + readcount, 1, readbytes - readcount, fs->f);
     }
-    return buff;
 }
 
 uint16_t readi16(char *buff, size_t offset)
@@ -133,7 +131,8 @@ uint32_t readi32(char *buff, size_t offset) {
  */
 
 static void read_bpb(f32 *fs, struct bios_parameter_block *bpb) {
-    char *sector0 = getSector(fs, 0, 1);
+    char sector0[512];
+    getSector(fs, sector0, 0, 1);
 
     bpb->bytes_per_sector = readi16(sector0, 11);;
     bpb->sectors_per_cluster = sector0[13];
@@ -161,7 +160,6 @@ static void read_bpb(f32 *fs, struct bios_parameter_block *bpb) {
     bpb->volume_id = readi32(sector0, 67);
     memcpy(&bpb->volume_label, sector0 + 71, 11); bpb->volume_label[11] = 0;
     memcpy(&bpb->system_id, sector0 + 82, 8); bpb->system_id[8] = 0;
-    free(sector0);
 }
 
 const struct bios_parameter_block *getBPB(f32 *fs) {
@@ -176,7 +174,9 @@ static uint32_t sector_for_cluster(f32 *fs, uint32_t cluster) {
 char *getCluster(f32 *fs, uint32_t cluster_number) {
     uint32_t sector = sector_for_cluster(fs, cluster_number);
     uint32_t sector_count = fs->bpb.sectors_per_cluster;
-    return getSector(fs, sector, sector_count);
+    char *buffer = malloc(sector_count * 512);
+    getSector(fs, buffer, sector, sector_count);
+    return buffer;
 }
 
 uint32_t get_next_cluster_id(f32 *fs, uint32_t cluster) {

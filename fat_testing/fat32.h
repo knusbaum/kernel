@@ -56,7 +56,7 @@ void destroyFilesystem(f32 *fs);
 
 const struct bios_parameter_block *getBPB(f32 *fs);
 
-char *getSector(f32 *fs, uint32_t sector, uint32_t count);
+void getSector(f32 *fs, char *buff, uint32_t sector, uint32_t count);
 char *getCluster(f32 *fs, uint32_t cluster_number);
 
 uint16_t readi16(char *buff, size_t offset);
