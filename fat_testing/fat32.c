@@ -325,7 +325,7 @@ void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
                     dir->entries[entry_count].name[len++] = '.';
                     memcpy(dir->entries[entry_count].name + len, extension, 4);
                 }
-           }
+            }
             entry_count++;
             currLFN = 0;
         }
@@ -458,7 +458,7 @@ int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t 
     char shortfname[12];
     shortfname[11] = 0;
     write_8_3_filename(fname, shortfname);
-    uint8_t checksum = checksum_fname(shortfname); 
+    uint8_t checksum = checksum_fname(shortfname);
     for(i = 0; i < required_entries_long_fname; i++) {
         printf("Writing long fname entry %u\n", index + i);
         // reverse the entry order
