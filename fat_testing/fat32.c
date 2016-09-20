@@ -378,6 +378,20 @@ uint32_t allocateCluster(f32 *fs) {
     return 0;
 }
 
+// Creates a checksum for an 8.3 filename
+// must be in directory-entry format, i.e.
+// fat32.c -> "FAT32   C  "
+uint8_t checksum_fname(char *fname) {
+    uint32_t i;
+    uint8_t checksum = 0;
+    for(i = 0; i < 11; i++) {
+        uint8_t highbit = (checksum & 0x1) << 7;
+        checksum = ((checksum >> 1) & 0x7F) | highbit;
+        checksum = checksum + fname[i];
+    }
+    return checksum;
+}
+
 int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t flen) {
     uint32_t dirs_per_cluster = fs->cluster_size / 32;
     uint32_t required_clusters = flen / fs->cluster_size;
@@ -441,10 +455,17 @@ int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t 
     uint32_t namelen = strlen(fname);
     uint32_t writtenchars = 0;
     char *entry = NULL;
+    char shortfname[12];
+    shortfname[11] = 0;
+    write_8_3_filename(fname, shortfname);
+    uint8_t checksum = checksum_fname(shortfname); 
     for(i = 0; i < required_entries_long_fname; i++) {
         printf("Writing long fname entry %u\n", index + i);
-        entry = start_entries + (i * 32);
+        // reverse the entry order
+        entry = start_entries + ((required_entries_long_fname - 1 - i) * 32);
+        //entry = start_entries + (i * 32);
         entry[0] = i+1;
+        entry[13] = checksum;
         int j;
         for(j = 1; j < 10; j+=2) {
             if(writtenchars < namelen) {
@@ -483,9 +504,9 @@ int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t 
         entry[11] = LFN;
     }
     printf("Done writing long fname entries!\n");
-    //char *lastentry = start_entries + (i * 32);
+    //char *lastentry = start_entries + ((required_entries_long_fname - 1) * 32);
     //lastentry[0] |= 0xF0;
-    entry[0] |= 0xF0;
+    entry[0] |= 0x40;
 
 //    // Find an empty directory entry
 //    int i;
@@ -508,54 +529,12 @@ int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t 
 
     // Write the actual file entry;
     //i++;
-    printf("Writing actual entry at index: %u\n", index + i);
-    char *actual_entry = start_entries + (i * 32);
+    printf("Writing actual entry at index: %u\n", index + required_entries_long_fname);
+    char *actual_entry = start_entries + (required_entries_long_fname * 32);
+    //char *actual_entry = start_entries + (i * 32);
     //char *actual_entry = root_cluster + offset;
 
-    // find the extension
-    int dot_index = -1;
-    for(i = namelen-1; i >= 0; i--) {
-        if(fname[i] == '.') {
-            // Found it!
-            dot_index = i;
-            break;
-        }
-    }
-
-    // Write the extension
-    if(dot_index >= 0) {
-        for(i = 0; i < 3; i++) {
-            uint32_t c_index = dot_index + 1 + i;
-            char c = c_index >= namelen ? ' ' : fname[c_index];
-            actual_entry[8 + i] = c;
-        }
-    }
-    else {
-        for(i = 0; i < 3; i++) {
-            actual_entry[8 + i] = ' ';
-        }
-    }
-
-    // Write the filename.
-    uint32_t firstpart_len = namelen;
-    if(dot_index >= 0) {
-        firstpart_len = dot_index;
-    }
-
-    if(firstpart_len > 8) {
-        // Write the weird tilde thing.
-        for(i = 0; i < 6; i++) {
-            actual_entry[i] = toupper(fname[i]);
-        }
-        actual_entry[6] = '~';
-        actual_entry[7] = '1'; // probably need to enumerate like files and increment.
-    }
-    else {
-        // Just write the file name.
-        for(i = 0; i < firstpart_len; i++) {
-            actual_entry[i] = toupper(fname[i]);
-        }
-    }
+    write_8_3_filename(fname, actual_entry);
 
     // Actually write the file!
     uint32_t writtenbytes = 0;
@@ -602,6 +581,58 @@ int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t 
     putCluster(fs, root_cluster, cluster);
     flushFAT(fs);
 }
+
+void write_8_3_filename(char *fname, char *buffer) {
+    memset(buffer, ' ', 11);
+    uint32_t namelen = strlen(fname);
+    // find the extension
+    int i;
+    int dot_index = -1;
+    for(i = namelen-1; i >= 0; i--) {
+        if(fname[i] == '.') {
+            // Found it!
+            dot_index = i;
+            break;
+        }
+    }
+
+    // Write the extension
+    if(dot_index >= 0) {
+        for(i = 0; i < 3; i++) {
+            uint32_t c_index = dot_index + 1 + i;
+            char c = c_index >= namelen ? ' ' : toupper(fname[c_index]);
+            buffer[8 + i] = c;
+        }
+    }
+    else {
+        for(i = 0; i < 3; i++) {
+            buffer[8 + i] = ' ';
+        }
+    }
+
+    // Write the filename.
+    uint32_t firstpart_len = namelen;
+    if(dot_index >= 0) {
+        firstpart_len = dot_index;
+    }
+
+    if(firstpart_len > 8) {
+        // Write the weird tilde thing.
+        for(i = 0; i < 6; i++) {
+            buffer[i] = toupper(fname[i]);
+        }
+        buffer[6] = '~';
+        buffer[7] = '1'; // probably need to enumerate like files and increment.
+    }
+    else {
+        // Just write the file name.
+        for(i = 0; i < firstpart_len; i++) {
+            buffer[i] = toupper(fname[i]);
+        }
+    }
+
+}
+
 
 void print_directory(f32 *fs, struct directory *dir) {
     uint32_t i;

@@ -72,3 +72,6 @@ void free_directory(f32 *fs, struct directory *dir);
 char *readFile(f32 *fs, struct dir_entry *dirent);
 
 void print_directory(f32 *fs, struct directory *dir);
+
+void write_8_3_filename(char *fname, char *buffer);
+
