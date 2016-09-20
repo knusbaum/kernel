@@ -37,7 +37,6 @@ struct bios_parameter_block {
 #define LFN (READONLY | HIDDEN | SYSTEM | VolumeID)
 
 struct dir_entry {
-    char dir_name[13]; // 11 standard chars plus one . plus \0
     char *name;
     uint8_t dir_attrs;
     uint32_t first_cluster;
@@ -58,7 +57,10 @@ void destroyFilesystem(f32 *fs);
 const struct bios_parameter_block *getBPB(f32 *fs);
 
 void getSector(f32 *fs, char *buff, uint32_t sector, uint32_t count);
-char *getCluster(f32 *fs, char *buff, uint32_t cluster_number);
+void getCluster(f32 *fs, char *buff, uint32_t cluster_number);
+
+void putSector(f32 *fs, char *buff, uint32_t sector, uint32_t count);
+void putCluster(f32 *fs, char *buff, uint32_t cluster_number);
 
 uint16_t readi16(char *buff, size_t offset);
 uint32_t readi32(char *buff, size_t offset);

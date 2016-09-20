@@ -32,7 +32,7 @@ static void trim_spaces(char *c, int max) {
 
 f32 *makeFilesystem(char *fatSystem) {
     f32 *fs = malloc(sizeof (struct f32));
-    fs->f = fopen(fatSystem, "r");
+    fs->f = fopen(fatSystem, "r+");
     rewind(fs->f);
     read_bpb(fs, &fs->bpb);
 
@@ -64,6 +64,11 @@ f32 *makeFilesystem(char *fatSystem) {
     return fs;
 }
 
+void flushFAT(f32 *fs) {
+    // TODO: This is not endian-safe. Must marshal the integers into a byte buffer.
+    putSector(fs, (char *)fs->FAT, fs->fat_begin_sector, fs->bpb.count_sectors_per_FAT32);
+}
+
 void destroyFilesystem(f32 *fs) {
     fflush(fs->f);
     fclose(fs->f);
@@ -81,6 +86,31 @@ void getSector(f32 *fs, char *buff, uint32_t sector, uint32_t count) {
             return;
         }
         readcount += fread(buff + readcount, 1, readbytes - readcount, fs->f);
+    }
+}
+
+void putSector(f32 *fs, char *buff, uint32_t sector, uint32_t count) {
+    uint32_t writebytes = count * 512;
+    fseek(fs->f, sector * 512, SEEK_SET);
+    if(feof(fs->f)) {
+        perror("EOF WHILE SEEKING!\n");
+        exit(1);
+    }
+    else if(ferror(fs->f)) {
+        perror("ERROR SEEKING!\n");
+        exit(1);
+    }
+    int writecount = 0;
+    while(writecount < writebytes) {
+        if(feof(fs->f)) {
+            perror("EOF WHILE WRITING!\n");
+            exit(1);
+        }
+        else if(ferror(fs->f)) {
+            perror("ERROR WRITING SECTOR! FS MAY BE CORRUPTED!\n");
+            exit(1);
+        }
+        writecount += fwrite(buff + writecount, 1, writebytes - writecount, fs->f);
     }
 }
 
@@ -171,12 +201,17 @@ static uint32_t sector_for_cluster(f32 *fs, uint32_t cluster) {
 }
 
 // CLUSTER NUMBERS START AT 2 (for some reason...)
-char *getCluster(f32 *fs, char *buff, uint32_t cluster_number) {
+void getCluster(f32 *fs, char *buff, uint32_t cluster_number) {
     uint32_t sector = sector_for_cluster(fs, cluster_number);
     uint32_t sector_count = fs->bpb.sectors_per_cluster;
     //char *buffer = malloc(sector_count * 512);
     getSector(fs, buff, sector, sector_count);
-    return buffer;
+}
+
+void putCluster(f32 *fs, char *buff, uint32_t cluster_number) {
+    uint32_t sector = sector_for_cluster(fs, cluster_number);
+    uint32_t sector_count = fs->bpb.sectors_per_cluster;
+    putSector(fs, buff, sector, sector_count);
 }
 
 uint32_t get_next_cluster_id(f32 *fs, uint32_t cluster) {
@@ -261,8 +296,6 @@ void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
                 continue;
             }
 
-            memcpy(dir->entries[entry_count].dir_name, entry, 11);
-            dir->entries[entry_count].dir_name[11] = 0;
             dir->entries[entry_count].dir_attrs = attrs;
             uint16_t first_cluster_high = readi16(entry, 20);
             uint16_t first_cluster_low = readi16(entry, 26);
@@ -271,24 +304,27 @@ void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
 
             if(currLFN > 0) {
                 dir->entries[entry_count].name = parse_long_name(LFN_entries, currLFN);
+                printf("Entry %d has a long name: [%s]\n", entry_count, dir->entries[entry_count].name);
             }
             else {
                 // Trim up the short filename.
+                dir->entries[entry_count].name = malloc(13);
+                memcpy(dir->entries[entry_count].name, entry, 11);
+                dir->entries[entry_count].name[11] = 0;
                 char extension[4];
-                memcpy(extension, dir->entries[entry_count].dir_name + 8, 3);
+                memcpy(extension, dir->entries[entry_count].name + 8, 3);
                 extension[3] = 0;
                 trim_spaces(extension, 3);
 
-                dir->entries[entry_count].dir_name[8] = 0;
-                trim_spaces(dir->entries[entry_count].dir_name, 8);
+                dir->entries[entry_count].name[8] = 0;
+                trim_spaces(dir->entries[entry_count].name, 8);
 
                 if(strlen(extension) > 0) {
-                    uint32_t len = strlen(dir->entries[entry_count].dir_name);
-                    dir->entries[entry_count].dir_name[len++] = '.';
-                    memcpy(dir->entries[entry_count].dir_name + len, extension, 4);
+                    uint32_t len = strlen(dir->entries[entry_count].name);
+                    dir->entries[entry_count].name[len++] = '.';
+                    memcpy(dir->entries[entry_count].name + len, extension, 4);
                 }
-                dir->entries[entry_count].name = dir->entries[entry_count].dir_name;
-            }
+           }
             entry_count++;
             currLFN = 0;
         }
@@ -302,8 +338,7 @@ void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
 void free_directory(f32 *fs, struct directory *dir){
     int i;
     for(i = 0; i < dir->num_entries; i++) {
-        if(dir->entries[i].name != dir->entries[i].dir_name)
-            free(dir->entries[i].name);
+        free(dir->entries[i].name);
     }
     free(dir->entries);
 }
@@ -345,25 +380,34 @@ uint32_t allocateCluster(f32 *fs) {
 int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t flen) {
     uint32_t dirs_per_cluster = fs->cluster_size / 32;
     uint32_t required_clusters = flen / fs->cluster_size;
+    if(flen % fs->cluster_size != 0) required_clusters++;
     // One for the traditional 8.3 name, one for each 13 charaters in the extended name.
     // Int division truncates, so if there's a remainder from length / 13, add another entry.
-    uint32_t required_entries_long_fname = 1 + (strlen(fname) / 13) + (strlen(fname) % 13 == 0 ? 0 : 1);
+    uint32_t required_entries_long_fname = 1 + (strlen(fname) / 13);
+    if(strlen(fname) / 13 > 0) {
+        required_entries_long_fname += (strlen(fname) % 13 == 0 ? 0 : 1);
+    }
+    uint32_t required_entries_total = required_entries_long_fname + 1;
 
+    int i;
     int index = -1;
     char root_cluster[fs->cluster_size];
+    uint32_t cluster = dir->cluster;
     while(1) {
         getCluster(fs, root_cluster, cluster);
-        
-        int i, in_a_row = 0;
+
+        int in_a_row = 0;
         for(i = 0; i < dirs_per_cluster; i++) {
+            char *entry = root_cluster + (i * 32);
+            uint8_t first_byte = entry[0];
             if(first_byte == 0x00 || first_byte == 0xE5) {
                 in_a_row++;
             }
             else {
                 in_a_row = 0;
             }
-            
-            if(in_a_row == required_entries_long_fname) {
+
+            if(in_a_row == required_entries_total) {
                 index = i - (in_a_row - 1);
                 break;
             }
@@ -384,8 +428,167 @@ int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t 
             cluster = next_cluster;
         }
     }
+
+    char *start_entries = root_cluster + (index * 32);
+    char *nameptr = fname;
+    uint32_t namelen = strlen(fname);
+    uint32_t writtenchars = 0;
+    char *entry = NULL;
+    for(i = 0; i < required_entries_long_fname; i++) {
+        entry = start_entries + (i * 32);
+        entry[0] = i+1;
+        int j;
+        for(j = 1; j < 10; j+=2) {
+            if(writtenchars < namelen) {
+                entry[j] = *nameptr;
+            }
+            else {
+                entry[j] = 0;
+            }
+            nameptr++;
+            writtenchars++;
+        }
+        for(j = 14; j < 25; j+=2) {
+            if(writtenchars < namelen) {
+                entry[j] = *nameptr;
+            }
+            else {
+                entry[j] = 0;
+            }
+            nameptr++;
+            writtenchars++;
+        }
+        for(j = 28; j < 31; j+=2) {
+            if(writtenchars < namelen) {
+                entry[j] = *nameptr;
+            }
+            else {
+                entry[j] = 0;
+            }
+            nameptr++;
+            writtenchars++;
+        }
+        entry[11] = LFN;
+    }
+    //char *lastentry = start_entries + (i * 32);
+    //lastentry[0] |= 0xF0;
+    entry[0] |= 0xF0;
+
+//    // Find an empty directory entry
+//    int i;
+//    uint32_t namelen = strlen(fname);
+//    uint32_t offset = 0xFFFFFFFF;
+//    char root_cluster[fs->cluster_size];
+//    getCluster(fs, root_cluster, dir->cluster);
+//    for(i = 0; i < dirs_per_cluster; i++) {
+//        char *entry = root_cluster + (i * 32);
+//        uint8_t first_byte = entry[0];
+//        if(first_byte == 0x00 || first_byte == 0xE5) {
+//            offset = i * 32;
+//            break;
+//        }
+//    }
+//    if(offset == 0xFFFFFFFF) {
+//        printf("Couldn't find a directory entry to write.\n");
+//        exit(1);
+//    }
+
+    // Write the actual file entry;
+    i++;
+    char *actual_entry = start_entries + (i * 32);
+    //char *actual_entry = root_cluster + offset;
+
+    // find the extension
+    int dot_index = -1;
+    for(i = namelen-1; i >= 0; i--) {
+        if(fname[i] == '.') {
+            // Found it!
+            dot_index = i;
+            break;
+        }
+    }
+
+    // Write the extension
+    if(dot_index >= 0) {
+        for(i = 0; i < 3; i++) {
+            uint32_t c_index = dot_index + 1 + i;
+            char c = c_index >= namelen ? ' ' : fname[c_index];
+            actual_entry[8 + i] = c;
+        }
+    }
+    else {
+        for(i = 0; i < 3; i++) {
+            actual_entry[8 + i] = ' ';
+        }
+    }
+
+    // Write the filename.
+    uint32_t firstpart_len = namelen;
+    if(dot_index >= 0) {
+        firstpart_len = dot_index;
+    }
+
+    if(firstpart_len > 8) {
+        // Write the weird tilde thing.
+        for(i = 0; i < 6; i++) {
+            actual_entry[i] = toupper(fname[i]);
+        }
+        actual_entry[6] = '~';
+        actual_entry[7] = '1'; // probably need to enumerate like files and increment.
+    }
+    else {
+        // Just write the file name.
+        for(i = 0; i < firstpart_len; i++) {
+            actual_entry[i] = toupper(fname[i]);
+        }
+    }
+
+    // Actually write the file!
+    uint32_t writtenbytes = 0;
+    uint32_t prevcluster = 0;
+    uint32_t firstcluster = 0;
+    for(i = 0; i < required_clusters; i++) {
+        uint32_t currcluster = allocateCluster(fs);
+        if(!firstcluster) {
+            firstcluster = currcluster;
+        }
+        char cluster_buffer[fs->cluster_size];
+        memset(cluster_buffer, 0, fs->cluster_size);
+        uint32_t bytes_to_write = flen - writtenbytes;
+        if(bytes_to_write > fs->cluster_size) {
+            bytes_to_write = fs->cluster_size;
+        }
+        memcpy(cluster_buffer, file + writtenbytes, bytes_to_write);
+        writtenbytes += bytes_to_write;
+        putCluster(fs, cluster_buffer, currcluster);
+        if(prevcluster) {
+            fs->FAT[prevcluster] = currcluster;
+        }
+        prevcluster = currcluster;
+    }
+
+    // Write the other fields.
+    actual_entry[11] = 0;
+
+    // high cluster bits
+    actual_entry[20] = (firstcluster >> 16) & 0xFF;
+    actual_entry[21] = (firstcluster >> 24) & 0xFF;
+    // low cluster bits
+    actual_entry[26] = (firstcluster) & 0xFF;
+    actual_entry[27] = (firstcluster >> 8) & 0xFF;
+
+    // file size
+    actual_entry[28] = flen & 0xFF;
+    actual_entry[29] = (flen >> 8) & 0xFF;
+    actual_entry[30] = (flen >> 16) & 0xFF;
+    actual_entry[31] = (flen >> 24) & 0xFF;
+
+    // Write the cluster back to disk
+    //char root_cluster[]
+    putCluster(fs, root_cluster, cluster);
+    flushFAT(fs);
 }
-    
+
 void print_directory(f32 *fs, struct directory *dir) {
     uint32_t i;
     int32_t max_name = 0;
