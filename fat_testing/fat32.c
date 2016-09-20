@@ -70,6 +70,7 @@ void flushFAT(f32 *fs) {
 }
 
 void destroyFilesystem(f32 *fs) {
+    flushFAT(fs);
     fflush(fs->f);
     fclose(fs->f);
     free(fs->FAT);
@@ -383,11 +384,15 @@ int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t 
     if(flen % fs->cluster_size != 0) required_clusters++;
     // One for the traditional 8.3 name, one for each 13 charaters in the extended name.
     // Int division truncates, so if there's a remainder from length / 13, add another entry.
-    uint32_t required_entries_long_fname = 1 + (strlen(fname) / 13);
-    if(strlen(fname) / 13 > 0) {
-        required_entries_long_fname += (strlen(fname) % 13 == 0 ? 0 : 1);
+    uint32_t required_entries_long_fname = (strlen(fname) / 13);
+    if(strlen(fname) % 13 > 0) {
+        required_entries_long_fname++;
     }
+
     uint32_t required_entries_total = required_entries_long_fname + 1;
+
+    printf("required entries for long fname: %u\n", required_entries_long_fname);
+    printf("required entries total: %u\n", required_entries_total);
 
     int i;
     int index = -1;
@@ -429,17 +434,21 @@ int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t 
         }
     }
 
+    printf("Entries start at entry index: %u\n", index);
+
     char *start_entries = root_cluster + (index * 32);
     char *nameptr = fname;
     uint32_t namelen = strlen(fname);
     uint32_t writtenchars = 0;
     char *entry = NULL;
     for(i = 0; i < required_entries_long_fname; i++) {
+        printf("Writing long fname entry %u\n", index + i);
         entry = start_entries + (i * 32);
         entry[0] = i+1;
         int j;
         for(j = 1; j < 10; j+=2) {
             if(writtenchars < namelen) {
+                printf("Putting %c\n", *nameptr);
                 entry[j] = *nameptr;
             }
             else {
@@ -450,6 +459,7 @@ int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t 
         }
         for(j = 14; j < 25; j+=2) {
             if(writtenchars < namelen) {
+                printf("Putting %c\n", *nameptr);
                 entry[j] = *nameptr;
             }
             else {
@@ -460,6 +470,7 @@ int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t 
         }
         for(j = 28; j < 31; j+=2) {
             if(writtenchars < namelen) {
+                printf("Putting %c\n", *nameptr);
                 entry[j] = *nameptr;
             }
             else {
@@ -468,8 +479,10 @@ int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t 
             nameptr++;
             writtenchars++;
         }
+        printf("Next!\n");
         entry[11] = LFN;
     }
+    printf("Done writing long fname entries!\n");
     //char *lastentry = start_entries + (i * 32);
     //lastentry[0] |= 0xF0;
     entry[0] |= 0xF0;
@@ -494,7 +507,8 @@ int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t 
 //    }
 
     // Write the actual file entry;
-    i++;
+    //i++;
+    printf("Writing actual entry at index: %u\n", index + i);
     char *actual_entry = start_entries + (i * 32);
     //char *actual_entry = root_cluster + offset;
 
