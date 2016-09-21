@@ -1,8 +1,7 @@
-
 struct bios_parameter_block {
     uint16_t bytes_per_sector;          // IMPORTANT
     uint8_t sectors_per_cluster;        // IMPORTANT
-    uint16_t reserved_sectors;          // IMPORTANT 
+    uint16_t reserved_sectors;          // IMPORTANT
     uint8_t FAT_count;                  // IMPORTANT
     uint16_t dir_entries;
     uint16_t total_sectors;
@@ -62,6 +61,6 @@ void free_directory(f32 *fs, struct directory *dir);
 
 char *readFile(f32 *fs, struct dir_entry *dirent);
 int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t flen);
-//void delFile(f32 *fs, struct directory *dir, struct dir_entry *dirent);
+void delFile(f32 *fs, struct directory *dir, struct dir_entry *dirent);
 
 void print_directory(f32 *fs, struct directory *dir);
