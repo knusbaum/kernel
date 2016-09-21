@@ -56,23 +56,12 @@ void destroyFilesystem(f32 *fs);
 
 const struct bios_parameter_block *getBPB(f32 *fs);
 
-void getSector(f32 *fs, char *buff, uint32_t sector, uint32_t count);
-void getCluster(f32 *fs, char *buff, uint32_t cluster_number);
-
-void putSector(f32 *fs, char *buff, uint32_t sector, uint32_t count);
-void putCluster(f32 *fs, char *buff, uint32_t cluster_number);
-
-uint16_t readi16(char *buff, size_t offset);
-uint32_t readi32(char *buff, size_t offset);
-
 void populate_root_dir(f32 *fs, struct directory *dir);
 void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster);
 void free_directory(f32 *fs, struct directory *dir);
 
 char *readFile(f32 *fs, struct dir_entry *dirent);
 int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t flen);
+//void delFile(f32 *fs, struct directory *dir, struct dir_entry *dirent);
 
 void print_directory(f32 *fs, struct directory *dir);
-
-void write_8_3_filename(char *fname, char *buffer);
-
