@@ -70,6 +70,7 @@ void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster);
 void free_directory(f32 *fs, struct directory *dir);
 
 char *readFile(f32 *fs, struct dir_entry *dirent);
+int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t flen);
 
 void print_directory(f32 *fs, struct directory *dir);
 

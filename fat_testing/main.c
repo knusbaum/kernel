@@ -2,7 +2,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <errno.h>
 #include "fat32.h"
+
+int handle_commands(f32 *fs, struct directory *dir, char *buffer);
 
 int main(void) {
 //   char shortfname[12];
@@ -59,8 +62,8 @@ int main(void) {
     char *file = "Hello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\n";
 
     //writeFile(fs, &dir, "Hello, world!\n", "hello_to_you.txt", 14);
-    writeFile(fs, &dir, file, "hello_to_you_you_you_you_you_you_you.txt", strlen(file));
-    exit(0);
+    //writeFile(fs, &dir, file, "hello_to_you_you_you_you_you_you_you.txt", strlen(file));
+    //exit(0);
 
     uint32_t bufflen = 24;
 
@@ -96,7 +99,10 @@ int main(void) {
         int x;
         int scanned = sscanf(buffer, "%u", &x);
         if(scanned == 0) {
-            printf("Invalid input. Enter a number.\n");
+//            int handle_commands(f32 *fs, struct directory *dir, char *buffer)
+            if(!handle_commands(fs, &dir, buffer)) {
+                printf("Invalid input. Enter a number or command.\n");
+            }
             continue;
         }
 
@@ -122,4 +128,67 @@ int main(void) {
             free(file);
         }
     }
+}
+
+struct bytes {
+    char *buff;
+    size_t len;
+    char *err;
+};
+
+struct bytes readLocalFile(char *fname) {
+    char *buff = malloc(1024);
+    if(buff == NULL) {
+        return (struct bytes) {NULL, 0, "Failed to allocate buffer."};
+    }
+    size_t curlen = 1024;
+    size_t totalRead = 0;
+    FILE *f = fopen(fname, "r");
+    if(f == NULL) {
+        return (struct bytes) {NULL, 0, strerror(errno)};
+    }
+    do {
+        totalRead += fread(buff + totalRead, 1, curlen - totalRead, f);
+        if(ferror(f)) {
+            fclose(f);
+            return (struct bytes) {NULL, 0, strerror(errno)};
+        }
+        if(totalRead == curlen) {
+            curlen *= 2;
+            char *newbuff = realloc(buff, curlen);
+            if(newbuff == NULL) {
+                free(buff);
+                return (struct bytes) {NULL, 0, "Failed to allocate buffer."};
+            }
+            buff = newbuff;
+        }
+    } while(!feof(f));
+    fclose(f);
+    return (struct bytes) {buff, totalRead, NULL};
+}
+
+void do_copy(f32 *fs, struct directory *dir, char *command, char *filename) {
+    if(filename == NULL) return;
+    struct bytes bs = readLocalFile(filename);
+    writeFile(fs, dir, bs.buff, filename, bs.len);
+    populate_dir(fs, dir, dir->cluster);
+}
+
+int handle_commands(f32 *fs, struct directory *dir, char *buffer) {
+    char *command = NULL;
+    char *filename = NULL;
+    int scanned = sscanf(buffer, "%ms %ms", &command, &filename);
+    if(scanned == 0) { printf("Failed to parse command.\n"); return 0; }
+    if(scanned >= 1) printf("command: [%s]\n", command);
+    if(scanned >= 2) printf("filename: [%s]\n", filename);
+
+    if(strcmp(command, "copy") == 0) {
+        do_copy(fs, dir, command, filename);
+        return 1;
+    }
+    if(strcmp(command, "ls") == 0) {
+        system("ls -l");
+        return 1;
+    }
+    return 0;
 }
