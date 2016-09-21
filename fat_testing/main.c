@@ -7,16 +7,20 @@
 
 int handle_commands(f32 *fs, struct directory *dir, char *buffer);
 
-int main(void) {
-//   char shortfname[12];
-//   shortfname[11] = 0;
-//   write_8_3_filename("hello.txt", shortfname);
-//   printf("Short fname: [%s]\n", shortfname);
-//   exit(0);
-//
-    f32 *fs = makeFilesystem("f32.disk");
+int main(int argc, char **argv) {
+
+    char *filename = NULL;
+    if(argc > 1) {
+        filename = argv[1];
+    }
+    else {
+        filename = "f32.disk";
+    }
+
+    f32 *fs = makeFilesystem(filename);
     if(fs == NULL) {
-        printf("Failed to read file. It's not a FAT32 fs.\n");
+        printf("Failed to read file [%s]. Does not exist or it's not a FAT32 fs.\n", filename);
+        printf("You may specify a file to read as a FAT32 partition as the first argument, or the program will look for a file called f32.disk.\n");
         exit(1);
     }
 
@@ -55,21 +59,16 @@ int main(void) {
     populate_root_dir(fs, &dir);
     printf("Done reading root directory.\n");
 
+    uint32_t bufflen = 24;
+    printf("Entering command line!\n");
 
     printf("\n\nROOT DIRECTORY: cluster[%d]\n", 2);
     print_directory(fs, &dir);
-
-    char *file = "Hello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\nHello, world!\n";
-
-    //writeFile(fs, &dir, "Hello, world!\n", "hello_to_you.txt", 14);
-    //writeFile(fs, &dir, file, "hello_to_you_you_you_you_you_you_you.txt", strlen(file));
-    //exit(0);
-
-    uint32_t bufflen = 24;
+    printf("Hello! Type 'help' to see available commands.\n");
 
     char buffer[bufflen + 1];
     while(1) {
-        printf("SELECT NUMBER: ");
+        printf(">> ");
         int i;
         for(i = 0; i < bufflen; i++) {
             int c = fgetc(stdin);
@@ -99,9 +98,12 @@ int main(void) {
         int x;
         int scanned = sscanf(buffer, "%u", &x);
         if(scanned == 0) {
-//            int handle_commands(f32 *fs, struct directory *dir, char *buffer)
-            if(!handle_commands(fs, &dir, buffer)) {
+            int command_ret = handle_commands(fs, &dir, buffer);
+            if(!command_ret) {
                 printf("Invalid input. Enter a number or command.\n");
+            }
+            else if(command_ret == -1) {
+                break;
             }
             continue;
         }
@@ -128,6 +130,7 @@ int main(void) {
             free(file);
         }
     }
+    destroyFilesystem(fs);
 }
 
 struct bytes {
@@ -167,11 +170,67 @@ struct bytes readLocalFile(char *fname) {
     return (struct bytes) {buff, totalRead, NULL};
 }
 
-void do_copy(f32 *fs, struct directory *dir, char *command, char *filename) {
+void do_copy(f32 *fs, struct directory *dir, char *filename) {
     if(filename == NULL) return;
     struct bytes bs = readLocalFile(filename);
+    if(bs.buff == NULL) {
+        printf("Couldn't read file [%s]\n", filename);
+        return;
+    }
     writeFile(fs, dir, bs.buff, filename, bs.len);
-    populate_dir(fs, dir, dir->cluster);
+}
+
+void do_delete(f32 *fs, struct directory *dir, char *filename) {
+    printf("do_delete(%s)\n", filename);
+    int i;
+    for(i = 0; i < dir->num_entries; i++) {
+        if(strcmp(filename, dir->entries[i].name) == 0) {
+            if(dir->entries[i].dir_attrs & DIRECTORY) {
+                struct directory subdir;
+                populate_dir(fs, &subdir, dir->entries[i].first_cluster);
+                int j;
+                for(j = 0; j < subdir.num_entries; j++) {
+                    // Delete these last!
+                    if(strcmp(subdir.entries[j].name, ".") == 0) {
+                        // Don't recur on current directory!
+                        continue;
+                    }
+                    if(strcmp(subdir.entries[j].name, "..") == 0) {
+                        // Don't recur on parent directory.
+                        continue;
+                    }
+//                    printf("Deleting [%s/%s]\n", dir->entries[i].name, subdir.entries[j].name);
+                    do_delete(fs, &subdir, subdir.entries[j].name);
+                }
+                // Now delete '.' and '..'
+                for(j = 0; j < subdir.num_entries; j++) {
+                    if(strcmp(subdir.entries[j].name, ".") == 0) {
+                        // Don't recur on current directory!
+//                        printf("Deleting dot file [%s/%s]\n", dir->entries[i].name, subdir.entries[j].name);
+                        delFile(fs, dir, subdir.entries[j].name);
+                        continue;
+                    }
+                    if(strcmp(subdir.entries[j].name, "..") == 0) {
+                        // Don't recur on parent directory.
+//                        printf("Deleting dot file [%s/%s]\n", dir->entries[i].name, subdir.entries[j].name);
+                        delFile(fs, dir, subdir.entries[j].name);
+                        continue;
+                    }
+                }
+                // Finally, delete the directory itself.
+//                printf("Deleting dir [%s]\n", filename);
+                delFile(fs, dir, filename);
+            }
+            else {
+//                printf("Deleting file [%s]\n", dir->entries[i].name);
+                delFile(fs, dir, dir->entries[i].name);
+            }
+        }
+    }
+}
+
+void do_touch(f32 *fs, struct directory *dir, char *filename) {
+    writeFile(fs, dir, "", filename, 0);
 }
 
 int handle_commands(f32 *fs, struct directory *dir, char *buffer) {
@@ -179,16 +238,62 @@ int handle_commands(f32 *fs, struct directory *dir, char *buffer) {
     char *filename = NULL;
     int scanned = sscanf(buffer, "%ms %ms", &command, &filename);
     if(scanned == 0) { printf("Failed to parse command.\n"); return 0; }
-    if(scanned >= 1) printf("command: [%s]\n", command);
-    if(scanned >= 2) printf("filename: [%s]\n", filename);
 
+    int ret = 0;
     if(strcmp(command, "copy") == 0) {
-        do_copy(fs, dir, command, filename);
-        return 1;
+        do_copy(fs, dir, filename);
+        ret = 1;
+    }
+    if(strcmp(command, "mkdir") == 0) {
+        if(filename != NULL && strlen(filename) > 0) {
+            printf("Making directory [%s].\n", filename);
+            mkdir(fs, dir, filename);
+        }
+        else {
+            printf("Need a directory name.\n");
+        }
+        ret = 1;
+    }
+    if(strcmp(command, "touch") == 0) {
+        if(filename != NULL && strlen(filename) > 0) {
+            do_touch(fs, dir, filename);
+        }
+        ret = 1;
     }
     if(strcmp(command, "ls") == 0) {
         system("ls -l");
-        return 1;
+        ret = 1;
     }
-    return 0;
+    if(strcmp(command, "del") == 0) {
+        if(filename != NULL && strlen(filename) > 0) {
+            do_delete(fs, dir, filename);
+        }
+        else {
+            printf("Need a file/directory name.\n");
+        }
+        ret = 1;
+    }
+    if(strcmp(command, "freeclusters") == 0) {
+        printf("Free clusters in FAT: %u\n", count_free_clusters(fs));
+        ret = 1;
+    }
+    if(strcmp(command, "exit") == 0) {
+        printf("See ya!\n");
+        ret = -1;
+    }
+    if(strcmp(command, "help") == 0) {
+        printf("Commands are: \n");
+        printf("\t[a number] -> a number corresponding with a file or directory will print that file or enter that directory.\n");
+        printf("\t(return) -> pressing return without entering a command will list the current directory. Entries marked with a 'D' next to their names are directories.\n");
+        printf("\tcopy [filename] -> Copies a filename within the CWD of this program into the current directory of the FAT filesystem. (see ls)\n");
+        printf("\tmkdir [dirname] -> Create a directory in the current directory.\n");
+        printf("\ttouch [filename] -> Create an empty file in the current directory.\n");
+        printf("\tls -> Call ls to list the files in the CWD of this program. Useful in conjunction with the 'copy' command to copy files into the FAT filesystem.\n");
+        printf("\tdel [filename | dirname] -> Delete a file or (recursively) a directory.\n");
+        printf("\tfreeclusters -> Count the free clusters available in the filesystem.\n");
+        printf("\texit -> Exit this program. This gracefully closes the filesystem. Sending an EOF on stdin works as well. Ctrl+C and other signals should be avoided to prevent filesystem corruption.\n");
+        ret = 1;
+    }
+    populate_dir(fs, dir, dir->cluster);
+    return ret;
 }

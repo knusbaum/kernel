@@ -171,7 +171,6 @@ static uint32_t get_next_cluster_id(f32 *fs, uint32_t cluster) {
     return fs->FAT[cluster] & 0x0FFFFFFF;
 }
 
-// char (*LFN_entries)[32]
 static char *parse_long_name(char *entries, uint8_t entry_count) {
     // each entry can hold 13 characters.
     char *name = malloc(entry_count * 13);
@@ -405,6 +404,9 @@ static void write_long_filename_entries(char *start, uint32_t num_entries, char 
 f32 *makeFilesystem(char *fatSystem) {
     f32 *fs = malloc(sizeof (struct f32));
     fs->f = fopen(fatSystem, "r+");
+    if(fs->f == NULL) {
+        return NULL;
+    }
     rewind(fs->f);
     read_bpb(fs, &fs->bpb);
 
@@ -504,6 +506,56 @@ static char *read_dir_entry(f32 *fs, char *start, char *end, struct dir_entry *d
     return entry + 32;
 }
 
+// This is a complicated one. It parses a directory entry into the dir_entry pointed to by target_dirent.
+// root_cluster  must point to a buffer big enough for two clusters.
+// entry         points to the entry the caller wants to parse, and must point to a spot within root_cluster.
+// nextentry     will be modified to hold the next spot within root_entry to begin looking for entries.
+// cluster       is the cluster number of the cluster loaded into root_cluster.
+// secondcluster will be modified IF this function needs to load another cluster to continue parsing
+//               the entry, in which case, it will be set to the value of the cluster loaded.
+//
+void next_dir_entry(f32 *fs, char *root_cluster, char *entry, char **nextentry, struct dir_entry *target_dirent, uint32_t cluster, uint32_t *secondcluster) {
+
+    char *end_of_cluster = root_cluster + fs->cluster_size;
+    *nextentry = read_dir_entry(fs, entry, end_of_cluster, target_dirent);
+    if(!*nextentry) {
+        // Something went wrong!
+        // Either the directory entry spans the bounds of a cluster,
+        // or the directory entry is invalid.
+        // Load the next cluster and retry.
+
+        // Figure out how much of the last cluster to "replay"
+        uint32_t bytes_from_prev_chunk = end_of_cluster - entry;
+
+        *secondcluster = get_next_cluster_id(fs, cluster);
+        if(*secondcluster >= 0x0FFFFFF8) {
+            // There's not another directory cluster to load
+            // and the previous entry was invalid!
+            // It's possible the filesystem is corrupt or... you know...
+            // my software could have bugs.
+            printf("FOUND BAD DIRECTORY ENTRY! EXITING!\n");
+            exit(1);
+        }
+        // Load the cluster after the previous saved entries.
+        getCluster(fs, root_cluster + fs->cluster_size, *secondcluster);
+        // Set entry to its new location at the beginning of root_cluster.
+        entry = root_cluster + fs->cluster_size - bytes_from_prev_chunk;
+
+        // Retry reading the entry.
+        *nextentry = read_dir_entry(fs, entry, end_of_cluster + fs->cluster_size, target_dirent);
+        if(!*nextentry) {
+            // Still can't parse the directory entry.
+            // Something is very wrong.
+            printf("FAILED TO READ DIRECTORY ENTRY! THE SOFTWARE IS BUGGY!\n");
+            exit(1);
+        }
+    }
+}
+
+// TODO: Refactor this. It is so similar to delFile that it would be nice
+// to combine the similar elements.
+// WARN: If you fix a bug in this function, it's likely you will find the same
+// bug in delFile.
 void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
     dir->cluster = cluster;
     uint32_t dirs_per_cluster = fs->cluster_size / 32;
@@ -530,48 +582,13 @@ void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
                 continue;
             }
 
-            char *end_of_cluster = root_cluster + fs->cluster_size;
-            char *nextentry = read_dir_entry(fs, entry, end_of_cluster, dir->entries + entry_count);
-            if(nextentry) {
-                entry = nextentry;
-            }
-            else {
-                // Something went wrong!
-                // Either the directory entry spans the bounds of a cluster,
-                // or the directory entry is invalid.
-                // Load the next cluster and retry.
-
-                // Figure out how much of the last cluster to "replay"
-                uint32_t bytes_from_prev_chunk = end_of_cluster - entry;
-
-                // Use memmove since the areas may overlap?
-                // (Hopefully not, that would indicate something really awful)
-                memmove(root_cluster, entry, bytes_from_prev_chunk);
-                cluster = get_next_cluster_id(fs, cluster);
-                if(cluster >= 0x0FFFFFF8) {
-                    // There's not another directory cluster to load
-                    // and the previous entry was invalid!
-                    // It's possible the filesystem is corrupt or... you know...
-                    // my software could have bugs.
-                    printf("FOUND BAD DIRECTORY ENTRY! EXITING!\n");
-                    exit(1);
-                }
-                // Load the cluster after the previous saved entries.
-                getCluster(fs, root_cluster + bytes_from_prev_chunk, cluster);
-                // Set entry to its new location at the beginning of root_cluster.
-                entry = root_cluster;
-
-                // Retry reading the entry.
-                char *nextentry = read_dir_entry(fs, entry, end_of_cluster, dir->entries + entry_count);
-                if(nextentry) {
-                    entry = nextentry;
-                }
-                else {
-                    // Still can't parse the directory entry.
-                    // Something is very wrong.
-                    printf("FAILED TO READ DIRECTORY ENTRY! THE SOFTWARE IS BUGGY!\n");
-                    exit(1);
-                }
+            uint32_t secondcluster = 0;
+            char *nextentry = NULL;
+            struct dir_entry *target_dirent = dir->entries + entry_count;
+            next_dir_entry(fs, root_cluster, entry, &nextentry, target_dirent, cluster, &secondcluster);
+            entry = nextentry;
+            if(secondcluster) {
+                cluster = secondcluster;
             }
 
             entry_count++;
@@ -580,6 +597,74 @@ void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
         if(cluster >= 0x0FFFFFF8) break;
     }
     dir->num_entries = entry_count;
+}
+
+static void zero_FAT_chain(f32 *fs, uint32_t start_cluster) {
+    uint32_t cluster = start_cluster;
+    while(cluster < 0x0FFFFFF8 && cluster != 0) {
+        uint32_t next_cluster = fs->FAT[cluster];
+        fs->FAT[cluster] = 0;
+        cluster = next_cluster;
+    }
+    flushFAT(fs);
+}
+
+// TODO: Refactor this. It is so similar to populate_dir that it would be nice
+// to combine the similar elements.
+// WARN: If you fix a bug in this function, it's likely you will find the same
+// bug in populate_dir.
+void delFile(f32 *fs, struct directory *dir, char *filename) { //struct dir_entry *dirent) {
+    uint32_t cluster = dir->cluster;
+    uint32_t dirs_per_cluster = fs->cluster_size / 32;
+
+    // Double the size in case we need to read a directory entry that
+    // spans the bounds of a cluster.
+    char root_cluster[fs->cluster_size * 2];
+    struct dir_entry target_dirent;
+
+    // Try to locate and invalidate the directory entries corresponding to the
+    // filename in dirent.
+    while(1) {
+        getCluster(fs, root_cluster, cluster);
+
+        uint32_t i;
+        char *entry = root_cluster;
+        while(entry - root_cluster < fs->cluster_size) {
+            unsigned char first_byte = *entry;
+            if(first_byte == 0x00 || first_byte == 0xE5) {
+                // This directory entry has never been written
+                // or it has been deleted.
+                entry += 32;
+                continue;
+            }
+
+            uint32_t secondcluster = 0;
+            char *nextentry = NULL;
+            next_dir_entry(fs, root_cluster, entry, &nextentry, &target_dirent, cluster, &secondcluster);
+
+            // We have a target dirent! see if it's the one we want!
+            if(strcmp(target_dirent.name, filename) == 0) {
+                // We found it! Invalidate all the entries.
+                memset(entry, 0, nextentry - entry);
+                putCluster(fs, root_cluster, cluster);
+                if(secondcluster) {
+                    putCluster(fs, root_cluster + fs->cluster_size, secondcluster);
+                }
+                zero_FAT_chain(fs, target_dirent.first_cluster);
+                return;
+            }
+            else {
+                // We didn't find it. Continue.
+                entry = nextentry;
+                if(secondcluster) {
+                    cluster = secondcluster;
+                }
+            }
+
+        }
+        cluster = get_next_cluster_id(fs, cluster);
+        if(cluster >= 0x0FFFFFF8) return;
+    }
 }
 
 void free_directory(f32 *fs, struct directory *dir){
@@ -613,10 +698,11 @@ char *readFile(f32 *fs, struct dir_entry *dirent) {
     return file;
 }
 
-int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t flen) {
+static int writeFile_impl(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t flen, uint8_t attrs, uint32_t setcluster) {
     uint32_t dirs_per_cluster = fs->cluster_size / 32;
     uint32_t required_clusters = flen / fs->cluster_size;
     if(flen % fs->cluster_size != 0) required_clusters++;
+    if(required_clusters == 0) required_clusters++; // Allocate at least one cluster.
     // One for the traditional 8.3 name, one for each 13 charaters in the extended name.
     // Int division truncates, so if there's a remainder from length / 13, add another entry.
     uint32_t required_entries_long_fname = (strlen(fname) / 13);
@@ -640,30 +726,39 @@ int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t 
     uint32_t prevcluster = 0;
     uint32_t firstcluster = 0;
     int i;
-    for(i = 0; i < required_clusters; i++) {
-        uint32_t currcluster = allocateCluster(fs);
-        if(!firstcluster) {
-            firstcluster = currcluster;
+    if(setcluster) {
+        // Caller knows where the first cluster is.
+        // Don't allocate or write anything.
+        firstcluster = setcluster;
+    }
+    else {
+        for(i = 0; i < required_clusters; i++) {
+            uint32_t currcluster = allocateCluster(fs);
+            if(!firstcluster) {
+                firstcluster = currcluster;
+            }
+            char cluster_buffer[fs->cluster_size];
+            memset(cluster_buffer, 0, fs->cluster_size);
+            uint32_t bytes_to_write = flen - writtenbytes;
+            if(bytes_to_write > fs->cluster_size) {
+                bytes_to_write = fs->cluster_size;
+            }
+            memcpy(cluster_buffer, file + writtenbytes, bytes_to_write);
+            writtenbytes += bytes_to_write;
+            putCluster(fs, cluster_buffer, currcluster);
+            if(prevcluster) {
+                fs->FAT[prevcluster] = currcluster;
+            }
+            prevcluster = currcluster;
         }
-        char cluster_buffer[fs->cluster_size];
-        memset(cluster_buffer, 0, fs->cluster_size);
-        uint32_t bytes_to_write = flen - writtenbytes;
-        if(bytes_to_write > fs->cluster_size) {
-            bytes_to_write = fs->cluster_size;
-        }
-        memcpy(cluster_buffer, file + writtenbytes, bytes_to_write);
-        writtenbytes += bytes_to_write;
-        putCluster(fs, cluster_buffer, currcluster);
-        if(prevcluster) {
-            fs->FAT[prevcluster] = currcluster;
-        }
-        prevcluster = currcluster;
     }
 
     // Write the other fields of the actual entry
     // We do it down here because we need the first cluster
     // number.
-    actual_entry[11] = 0;
+
+    // attrs
+    actual_entry[11] = attrs;
 
     // high cluster bits
     actual_entry[20] = (firstcluster >> 16) & 0xFF;
@@ -684,8 +779,29 @@ int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t 
     flushFAT(fs);
 }
 
-void delFile(f32 *fs, struct directory *dir, struct dir_entry *dirent) {
+int writeFile(f32 *fs, struct directory *dir, char *file, char *fname, uint32_t flen) {
+    return writeFile_impl(fs, dir, file, fname, flen, 0, 0);
+}
 
+int mkdir_subdirs(f32 *fs, struct directory *dir, uint32_t parentcluster) {
+    writeFile_impl(fs, dir, NULL, ".", 0, DIRECTORY, dir->cluster);
+    writeFile_impl(fs, dir, NULL, "..", 0, DIRECTORY, parentcluster);
+}
+
+int mkdir(f32 *fs, struct directory *dir, char *dirname) {
+    int ret = writeFile_impl(fs, dir, NULL, dirname, 0, DIRECTORY, 0);
+
+    // We need to add the subdirectories '.' and '..'
+    struct directory subdir;
+    populate_dir(fs, &subdir, dir->cluster);
+    int i;
+    for(i = 0; i < subdir.num_entries; i++) {
+        if(strcmp(subdir.entries[i].name, dirname) == 0) {
+            struct directory newsubdir;
+            populate_dir(fs, &newsubdir, subdir.entries[i].first_cluster);
+            mkdir_subdirs(fs, &newsubdir, subdir.cluster);
+        }
+    }
 }
 
 void print_directory(f32 *fs, struct directory *dir) {
@@ -705,11 +821,29 @@ void print_directory(f32 *fs, struct directory *dir) {
                dir->entries[i].file_size, dir->entries[i].first_cluster);
         uint32_t cluster = dir->entries[i].first_cluster;
         uint32_t cluster_count = 1;
+        //printf("\nLooking for cluster chain for: [%s]\n",dir->entries[i].name);
         while(1) {
+//            printf("cluster: %u\n", cluster);
             cluster = fs->FAT[cluster];
             if(cluster >= 0x0FFFFFF8) break;
+            if(cluster == 0) {
+                printf("\nBAD CLUSTER CHAIN! FS IS CORRUPT!\n");
+                exit(1);
+            }
             cluster_count++;
         }
         printf("clusters: [%u]\n", cluster_count);
     }
+}
+
+uint32_t count_free_clusters(f32 *fs) {
+    uint32_t clusters_in_fat = (fs->bpb.count_sectors_per_FAT32 * 512) / 4;
+    uint32_t i;
+    uint32_t count = 0;
+    for(i = 0; i < clusters_in_fat; i++) {
+        if(fs->FAT[i] == 0) {
+            count++;
+        }
+    }
+    return count;
 }
