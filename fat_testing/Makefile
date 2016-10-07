@@ -1,2 +1,2 @@
 all:
-	cc -ggdb *.c
+	cc -pg -ggdb *.c

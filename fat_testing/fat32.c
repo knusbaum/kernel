@@ -17,6 +17,7 @@ struct f32 {
     uint32_t fat_begin_sector;
     uint32_t cluster_begin_sector;
     uint32_t cluster_size;
+    uint32_t cluster_alloc_hint;
 };
 
 static void read_bpb(f32 *fs, struct bios_parameter_block *bpb);
@@ -219,10 +220,19 @@ static void clear_cluster(f32 *fs, uint32_t cluster) {
 
 static uint32_t allocateCluster(f32 *fs) {
     uint32_t i, ints_per_fat = (512 * fs->bpb.count_sectors_per_FAT32) / 4;
-    for(i = 0; i < ints_per_fat; i++) {
+    for(i = fs->cluster_alloc_hint; i < ints_per_fat; i++) {
         if(fs->FAT[i] == 0) {
             fs->FAT[i] = 0x0FFFFFFF;
             clear_cluster(fs, i);
+            fs->cluster_alloc_hint = i+1;
+            return i;
+        }
+    }
+    for(i = 0; i < fs->cluster_alloc_hint; i++) {
+        if(fs->FAT[i] == 0) {
+            fs->FAT[i] = 0x0FFFFFFF;
+            clear_cluster(fs, i);
+            fs->cluster_alloc_hint = i+1;
             return i;
         }
     }
@@ -421,6 +431,7 @@ f32 *makeFilesystem(char *fatSystem) {
     fs->fat_begin_sector = fs->partition_begin_sector + fs->bpb.reserved_sectors;
     fs->cluster_begin_sector = fs->fat_begin_sector + (fs->bpb.FAT_count * fs->bpb.count_sectors_per_FAT32);
     fs->cluster_size = 512 * fs->bpb.sectors_per_cluster;
+    fs->cluster_alloc_hint = 0;
 
     // Load the FAT
     uint32_t bytes_per_fat = 512 * fs->bpb.count_sectors_per_FAT32;

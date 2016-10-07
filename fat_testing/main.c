@@ -130,6 +130,7 @@ int main(int argc, char **argv) {
             free(file);
         }
     }
+    free_directory(fs, &dir);
     destroyFilesystem(fs);
 }
 
@@ -148,11 +149,13 @@ struct bytes readLocalFile(char *fname) {
     size_t totalRead = 0;
     FILE *f = fopen(fname, "r");
     if(f == NULL) {
+        free(buff);
         return (struct bytes) {NULL, 0, strerror(errno)};
     }
     do {
         totalRead += fread(buff + totalRead, 1, curlen - totalRead, f);
         if(ferror(f)) {
+            free(buff);
             fclose(f);
             return (struct bytes) {NULL, 0, strerror(errno)};
         }
@@ -161,6 +164,7 @@ struct bytes readLocalFile(char *fname) {
             char *newbuff = realloc(buff, curlen);
             if(newbuff == NULL) {
                 free(buff);
+                fclose(f);
                 return (struct bytes) {NULL, 0, "Failed to allocate buffer."};
             }
             buff = newbuff;
@@ -177,6 +181,7 @@ void do_copy(f32 *fs, struct directory *dir, char *filename) {
         printf("Couldn't read file [%s]\n", filename);
         return;
     }
+    free(bs.buff);
     writeFile(fs, dir, bs.buff, filename, bs.len);
 }
 
@@ -217,6 +222,7 @@ void do_delete(f32 *fs, struct directory *dir, char *filename) {
                         continue;
                     }
                 }
+                free_directory(fs, &subdir);
                 // Finally, delete the directory itself.
 //                printf("Deleting dir [%s]\n", filename);
                 delFile(fs, dir, filename);
@@ -294,6 +300,9 @@ int handle_commands(f32 *fs, struct directory *dir, char *buffer) {
         printf("\texit -> Exit this program. This gracefully closes the filesystem. Sending an EOF on stdin works as well. Ctrl+C and other signals should be avoided to prevent filesystem corruption.\n");
         ret = 1;
     }
+    if(command) free(command);
+    if(filename) free(filename);
+    free_directory(fs, dir);
     populate_dir(fs, dir, dir->cluster);
     return ret;
 }
