@@ -11,6 +11,7 @@
 #include "common.h"
 #include "kheap.h"
 #include "multiboot.h"
+#include "keyboard.h"
 
 /* This tutorial will only work for the 32-bit ix86 targets. */
 #if !defined(__i386__)
@@ -45,6 +46,8 @@ void kernel_main(struct multiboot_info *mi)
 
     init_timer(100);
 
+    initialize_keyboard();
+    
     initialize_paging(total_frames);
 
     malloc_stats();
@@ -56,5 +59,7 @@ void kernel_main(struct multiboot_info *mi)
 
     // Spinloop to allow status to converge before halt.
     for(i = 0; i < 0x0FFFFFFF; i++){}
+    while(1);
     terminal_writestring("Halting.\n");
+
 }

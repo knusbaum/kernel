@@ -16,7 +16,8 @@ OBJECTS=terminal.o \
 	kmalloc_early.o \
 	frame.o \
 	paging.o \
-	kheap.o
+	kheap.o \
+	keyboard.o
 
 CFLAGS = -ggdb -m32 -O0 -Wall -Wextra -std=gnu99 -ffreestanding
 AFLAGS = --32 -ggdb
@@ -30,7 +31,7 @@ clean:
 nuke: clean
 	-@rm $(KERNEL_IMG) *.d
 
-kernel.o : kernel.c terminal.h gdt.h idt.h pit.h pic.h
+kernel.o : kernel.c terminal.h gdt.h idt.h pit.h pic.h kheap.h keyboard.h
 	$(CC) $(CFLAGS) -c kernel.c -o kernel.o
 
 boot.o : boot.s
@@ -89,3 +90,6 @@ paging.o : paging.c paging.h
 
 kheap.o : kheap.c kheap.h
 	$(CC) $(CFLAGS) -c kheap.c -o kheap.o
+
+keyboard.o : keyboard.c keyboard.h
+	$(CC) $(CFLAGS) -c keyboard.c -o keyboard.o
