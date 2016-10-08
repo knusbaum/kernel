@@ -156,6 +156,16 @@ void terminal_putchar(char c)
     case '\n':
         terminal_newline();
         break;
+    case '\t':
+        terminal_writestring("    ");
+        break;
+    case BS:
+        if(terminal_column > 0) {
+            terminal_column--;
+            terminal_putchar(' ');
+            terminal_column--;
+        }
+        break;
     default:
         terminal_putentryat(c, text_color, terminal_column, terminal_row);
         terminal_advance();

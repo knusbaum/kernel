@@ -73,6 +73,28 @@ halt:
 .Lhang:
     jmp .Lhang
 
+.section .text
+.global pause
+.type pause @function
+pause:
+    hlt
+    ret
+
+.section .text
+.global sys_cli
+.type sys_cli @function
+sys_cli:
+    hlt
+    ret
+
+
+.section .text
+.global sys_sti
+.type sys_sti @function
+sys_sti:
+    hlt
+    ret
+    
 # Set the size of the _start symbol to the current location '.' minus its start.
 # This is useful when debugging or when you implement call tracing.
 .size _start, . - _start

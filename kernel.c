@@ -23,6 +23,7 @@
 extern "C" /* Use C linkage for kernel_main. */
 #endif
 
+extern void pause();
 extern char _binary_f32_disk_start;
 
 void kernel_main(struct multiboot_info *mi)
@@ -59,7 +60,10 @@ void kernel_main(struct multiboot_info *mi)
 
     // Spinloop to allow status to converge before halt.
     for(i = 0; i < 0x0FFFFFFF; i++){}
-    while(1);
+    while(1) {
+        char c = get_ascii_char();
+        terminal_putchar(c);
+    };
     terminal_writestring("Halting.\n");
 
 }

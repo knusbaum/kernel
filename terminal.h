@@ -4,6 +4,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define ESC (0x1B)
+#define BS  (0x08)
+
 /* Hardware text mode color constants. */
 enum vga_color
 {
