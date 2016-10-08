@@ -127,9 +127,9 @@ void ata_pio_read28(uint32_t LBA, uint8_t sectorcount, uint8_t *target) {
                 // Drive is ready to transfer data!
                 break;
             }
-            terminal_writestring("Polling for drive ready.\n");
+            //terminal_writestring("Polling for drive ready.\n");
         }
-        terminal_writestring("Transfering data!\n");
+        //terminal_writestring("Transfering data!\n");
         // Transfer the data!
         insw(ATA_PRIMARY_DATA, (void *)target, 256);
         target += 256;
@@ -153,6 +153,13 @@ void ata_pio_read28(uint32_t LBA, uint8_t sectorcount, uint8_t *target) {
  */
 
 void ata_pio_read48(uint64_t LBA, uint16_t sectorcount, uint8_t *target) {
+    terminal_writestring("Reading LBA: ");
+    terminal_write_dec(LBA);
+    terminal_writestring(" sectorcount: ");
+    terminal_write_dec(sectorcount);
+    terminal_writestring(" into memory @ ");
+    terminal_write_hex(target);
+    terminal_putchar('\n');
     // HARD CODE MASTER (for now)
     outb(ATA_PRIMARY_DRIVE_HEAD, 0x40);                     // Select master
     outb(ATA_PRIMARY_SECCOUNT, (sectorcount >> 8) & 0xFF ); // sectorcount high
@@ -175,9 +182,9 @@ void ata_pio_read48(uint64_t LBA, uint16_t sectorcount, uint8_t *target) {
                 // Drive is ready to transfer data!
                 break;
             }
-            terminal_writestring("Polling for drive ready.\n");
+            //terminal_writestring("Polling for drive ready.\n");
         }
-        terminal_writestring("Transfering data!\n");
+        //terminal_writestring("Transfering data!\n");
         // Transfer the data!
         insw(ATA_PRIMARY_DATA, (void *)target, 256);
         target += 256;
@@ -225,7 +232,7 @@ void ata_pio_write48(uint64_t LBA, uint16_t sectorcount, uint8_t *target) {
             }
             //terminal_writestring("Polling for drive ready.\n");
         }
-        terminal_writestring("Transfering data!\n");
+        //terminal_writestring("Transfering data!\n");
         // Transfer the data!
         outsw(ATA_PRIMARY_DATA, (void *)target, 256);
         terminal_writestring("Done transfering!\n");

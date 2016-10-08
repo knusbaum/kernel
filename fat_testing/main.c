@@ -181,8 +181,8 @@ void do_copy(f32 *fs, struct directory *dir, char *filename) {
         printf("Couldn't read file [%s]\n", filename);
         return;
     }
-    free(bs.buff);
     writeFile(fs, dir, bs.buff, filename, bs.len);
+    free(bs.buff);
 }
 
 void do_delete(f32 *fs, struct directory *dir, char *filename) {

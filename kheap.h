@@ -15,6 +15,8 @@ void initialize_kheap(uint32_t start_addr);
  */
 void *kmalloc(uint32_t size);
 
+void *krealloc(void *p, uint32_t size);
+
 /**
  * Allocates a contiguous region of memory 'size' in size.
  * If page_align==1, it creates that block starting on a page boundary.

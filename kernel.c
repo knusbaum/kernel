@@ -12,7 +12,7 @@
 #include "kheap.h"
 #include "multiboot.h"
 #include "keyboard.h"
-#include "ata_pio_drv.h"
+#include "fat32.h"
 
 /* This tutorial will only work for the 32-bit ix86 targets. */
 #if !defined(__i386__)
@@ -56,41 +56,26 @@ void kernel_main(struct multiboot_info *mi)
     terminal_writestring("Done setting up paging.\nKernel is ready to go!!!\n\n");
     terminal_settextcolor(make_color(COLOR_BLUE, COLOR_WHITE));
     // Kernel ready to go!
-    int i = 0;
 
-    terminal_writestring("Checking for primary ATA master drive: ");
-    uint8_t res = identify();
-    terminal_write_dec(res);
-    if(res) {
-        terminal_writestring("Drive present!\n");
-    }
-    else {
-        terminal_writestring("Drive NOT present!\n");
+    terminal_writestring("Creating fat32 filesystem.\n");
+    f32 *fs = makeFilesystem("");
+    if(fs == NULL) {
+        terminal_writestring("Failed to create fat32 filesystem. Disk may be corrupt.\n");
         return;
     }
 
-    uint8_t drive_buffer[256 * 2];
-    ata_pio_read48(0, 1, drive_buffer);
+    terminal_writestring("Reading root directory!\n");
+    struct directory root;
+    populate_root_dir(fs, &root);
+    terminal_writestring("Done! Going to print root.\n");
+    print_directory(fs, &root);
+    terminal_writestring("Done!\n");
 
-    terminal_writestring("Data read! First byte: ");
-    terminal_write_hex(((uint32_t *)drive_buffer)[0]);
-    terminal_putchar('\n');
+    terminal_writestring("Reading subdir \"daz\"\n");
+    populate_dir(fs, &root, root.entries[5].first_cluster);
+    print_directory(fs, &root);
+    terminal_writestring("Done!\n");
 
-    terminal_writestring("Trying to write to drive!\n");
-    for(i = 0; i < 256 * 2; i++) {
-        drive_buffer[i] = 0xEF;
-    }
-    ata_pio_write48(0, 1, drive_buffer);
-    terminal_writestring("Done writing!\n");
-
-    ata_pio_read48(0, 1, drive_buffer);
-    terminal_writestring("Data read! First byte: ");
-    terminal_write_hex(((uint32_t *)drive_buffer)[0]);
-    terminal_putchar('\n');
-    return;
-
-    // Spinloop to allow status to converge before halt.
-    for(i = 0; i < 0x0FFFFFFF; i++){}
     while(1) {
         char c = get_ascii_char();
         terminal_putchar(c);

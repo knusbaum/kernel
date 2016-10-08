@@ -18,7 +18,8 @@ OBJECTS=terminal.o \
 	paging.o \
 	kheap.o \
 	keyboard.o \
-	ata_pio_drv.o
+	ata_pio_drv.o \
+	fat32.o
 
 CFLAGS = -ggdb -m32 -O0 -Wall -Wextra -std=gnu99 -ffreestanding
 AFLAGS = --32 -ggdb
@@ -97,3 +98,7 @@ keyboard.o : keyboard.c keyboard.h
 
 ata_pio_drv.o : ata_pio_drv.c ata_pio_drv.h
 	$(CC) $(CFLAGS) -c ata_pio_drv.c -o ata_pio_drv.o
+
+fat32.o : fat32.c fat32.h
+	$(CC) $(CFLAGS) -c fat32.c -o fat32.o
+
