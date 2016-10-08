@@ -103,7 +103,7 @@ struct page *get_page(uint32_t address, int make, struct page_directory *dir)
         }
         else
         {
-            dir->tables[table_idx] = (struct page_table *)kmalloc(sizeof(struct page_table), 1, &tmp);
+            dir->tables[table_idx] = (struct page_table *)kmalloc_ap(sizeof(struct page_table), 1, &tmp);
         }
         memset(dir->tables[table_idx], 0, 0x1000);
         dir->tablesPhysical[table_idx] = tmp | 0x7; // PRESENT, RW, US.

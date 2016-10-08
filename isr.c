@@ -28,9 +28,9 @@ void isr_handler(registers_t regs)
         halt();
     }
 
-    terminal_writestring("Received interrupt: ");
-    terminal_write_dec(regs.int_no);
-    terminal_writestring("\n");
+//    terminal_writestring("Received interrupt: ");
+//    terminal_write_dec(regs.int_no);
+//    terminal_writestring("\n");
 
     if(interrupt_handlers[regs.int_no])
     {

@@ -213,7 +213,21 @@ static struct free_header *find_block(uint32_t size, uint8_t align) {
     return block;
 }
 
-void *kmalloc(uint32_t size, uint8_t align, uint32_t *phys) {
+void *kmalloc(uint32_t size) {
+    return kmalloc_ap(size, 0, NULL);
+}
+
+void *krealloc(void *p, uint32_t size) {
+    struct header *header = ((char *)p) - sizeof (struct header);
+    void *newchunk = kmalloc(size);
+    if(newchunk == NULL) return NULL; // Don't know if this can actually happen
+
+    memcpy(newchunk, p, header->size);
+    kfree(p);
+    return newchunk;
+}
+
+void *kmalloc_ap(uint32_t size, uint8_t align, uint32_t *phys) {
     if(size <= 0) {
         return NULL;
     }

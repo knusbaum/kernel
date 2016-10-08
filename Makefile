@@ -17,7 +17,8 @@ OBJECTS=terminal.o \
 	frame.o \
 	paging.o \
 	kheap.o \
-	keyboard.o
+	keyboard.o \
+	ata_pio_drv.o
 
 CFLAGS = -ggdb -m32 -O0 -Wall -Wextra -std=gnu99 -ffreestanding
 AFLAGS = --32 -ggdb
@@ -93,3 +94,6 @@ kheap.o : kheap.c kheap.h
 
 keyboard.o : keyboard.c keyboard.h
 	$(CC) $(CFLAGS) -c keyboard.c -o keyboard.o
+
+ata_pio_drv.o : ata_pio_drv.c ata_pio_drv.h
+	$(CC) $(CFLAGS) -c ata_pio_drv.c -o ata_pio_drv.o

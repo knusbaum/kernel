@@ -2,7 +2,8 @@
 .global outb
 .global inb
 .global inw
-.global insl
+.global insw
+.global outsw
 
 .type outb, @function
     # void outb(uint16_t port, uint8_t value)
@@ -35,25 +36,46 @@ inw:
     ret
 .size inw, . - inw
 
-.type insl, @function
-    # void insl(uint16_t port, void *addr, unsigned int count)
-insl:
+.type insw, @function
+    # void insw(uint16_t port, void *addr, unsigned int count)
+insw:
     pushl   %edi
     movl    8(%esp), %edx  # port
     movl    12(%esp), %edi # addr
     movl    16(%esp), %ecx # count
 
     xorl    %eax, %eax
-.startLoop:
+.insw_startLoop:
     cmpl    %eax, %ecx
-    je      .end
+    je      .insw_end
 
-    insl
+    insw
 
-    addl    $4, %edi
     incl    %eax
-    jmp     .startLoop
+    jmp     .insw_startLoop
 
-.end:
+.insw_end:
     popl    %edi
+    ret
+
+.type outsw, @function
+    # void outsw(uint16_t port, void *addr, unsigned int count)
+outsw:
+    pushl   %esi
+    movl    8(%esp), %edx  # port
+    movl    12(%esp), %esi # addr
+    movl    16(%esp), %ecx # count
+
+    xorl    %eax, %eax
+.outsw_startLoop:
+    cmpl    %eax, %ecx
+    je      .outsw_end
+
+    outsw
+
+    incl    %eax
+    jmp     .outsw_startLoop
+
+.outsw_end:
+    popl    %esi
     ret

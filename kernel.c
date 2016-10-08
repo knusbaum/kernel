@@ -12,6 +12,7 @@
 #include "kheap.h"
 #include "multiboot.h"
 #include "keyboard.h"
+#include "ata_pio_drv.h"
 
 /* This tutorial will only work for the 32-bit ix86 targets. */
 #if !defined(__i386__)
@@ -48,7 +49,7 @@ void kernel_main(struct multiboot_info *mi)
     init_timer(100);
 
     initialize_keyboard();
-    
+
     initialize_paging(total_frames);
 
     malloc_stats();
@@ -57,6 +58,36 @@ void kernel_main(struct multiboot_info *mi)
     // Kernel ready to go!
     int i = 0;
 
+    terminal_writestring("Checking for primary ATA master drive: ");
+    uint8_t res = identify();
+    terminal_write_dec(res);
+    if(res) {
+        terminal_writestring("Drive present!\n");
+    }
+    else {
+        terminal_writestring("Drive NOT present!\n");
+        return;
+    }
+
+    uint8_t drive_buffer[256 * 2];
+    ata_pio_read48(0, 1, drive_buffer);
+
+    terminal_writestring("Data read! First byte: ");
+    terminal_write_hex(((uint32_t *)drive_buffer)[0]);
+    terminal_putchar('\n');
+
+    terminal_writestring("Trying to write to drive!\n");
+    for(i = 0; i < 256 * 2; i++) {
+        drive_buffer[i] = 0xEF;
+    }
+    ata_pio_write48(0, 1, drive_buffer);
+    terminal_writestring("Done writing!\n");
+
+    ata_pio_read48(0, 1, drive_buffer);
+    terminal_writestring("Data read! First byte: ");
+    terminal_write_hex(((uint32_t *)drive_buffer)[0]);
+    terminal_putchar('\n');
+    return;
 
     // Spinloop to allow status to converge before halt.
     for(i = 0; i < 0x0FFFFFFF; i++){}

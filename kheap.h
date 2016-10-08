@@ -8,11 +8,18 @@
  * start_addr must be a pointer to a mapped kernel page.
  */
 void initialize_kheap(uint32_t start_addr);
+
+/**
+ * Allocates a contiguout region of memory 'size' bytes in size.
+ * equivalent to kmalloc_ap(size, 0, NULL);
+ */
+void *kmalloc(uint32_t size);
+
 /**
  * Allocates a contiguous region of memory 'size' in size.
  * If page_align==1, it creates that block starting on a page boundary.
  */
-void *kmalloc(uint32_t size, uint8_t page_align, uint32_t *phys);
+void *kmalloc_ap(uint32_t size, uint8_t page_align, uint32_t *phys);
 
 /**
  * Releases a block allocated with 'alloc'.
