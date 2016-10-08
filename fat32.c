@@ -45,6 +45,9 @@ static void getSector(f32 *fs, uint8_t *buff, uint32_t sector, uint32_t count) {
 //        }
 //        readcount += fread(buff + readcount, 1, readbytes - readcount, fs->f);
 //    }
+//    terminal_writestring("Getting sector ");
+//    terminal_write_dec(sector);
+//    terminal_writestring(".\n");
     ata_pio_read48(sector, count, buff);
 }
 
@@ -71,7 +74,17 @@ static void putSector(f32 *fs, uint8_t *buff, uint32_t sector, uint32_t count) {
 //        }
 //        writecount += fwrite(buff + writecount, 1, writebytes - writecount, fs->f);
 //    }
-    ata_pio_write48(sector, count, buff);
+//    terminal_writestring("Putting sector ");
+//    terminal_write_dec(sector);
+//    terminal_writestring(" count: ");
+//    terminal_write_dec(count);
+//    terminal_writestring("\n");
+    //ata_pio_write48(sector, count, buff);
+    uint32_t i;
+    for(i = 0; i < count; i++) {
+        ata_pio_write48(sector + i, 1, buff + (i * 512));
+    }
+//    terminal_writestring("DONE!\n");
 }
 
 static void flushFAT(f32 *fs) {
@@ -884,6 +897,7 @@ void print_directory(f32 *fs, struct directory *dir) {
         terminal_write_dec(cluster_count);
         terminal_writestring("]\n");
     }
+    kfree(namebuff);
 }
 
 uint32_t count_free_clusters(f32 *fs) {

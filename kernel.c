@@ -13,6 +13,7 @@
 #include "multiboot.h"
 #include "keyboard.h"
 #include "fat32.h"
+#include "fat32_console.h"
 
 /* This tutorial will only work for the 32-bit ix86 targets. */
 #if !defined(__i386__)
@@ -64,17 +65,9 @@ void kernel_main(struct multiboot_info *mi)
         return;
     }
 
-    terminal_writestring("Reading root directory!\n");
-    struct directory root;
-    populate_root_dir(fs, &root);
-    terminal_writestring("Done! Going to print root.\n");
-    print_directory(fs, &root);
-    terminal_writestring("Done!\n");
+    fat32_console(fs);
 
-    terminal_writestring("Reading subdir \"daz\"\n");
-    populate_dir(fs, &root, root.entries[5].first_cluster);
-    print_directory(fs, &root);
-    terminal_writestring("Done!\n");
+    terminal_writestring("FAT32 shell exited. It is safe to power off.\nSystem is in free-typing mode.\n");
 
     while(1) {
         char c = get_ascii_char();

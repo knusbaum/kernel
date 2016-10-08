@@ -86,6 +86,8 @@ const uint8_t upper_ascii_codes[256] = {
 
 // shift flags. left shift is bit 0, right shift is bit 1.
 uint8_t shift;
+// control flags just like shift flags.
+uint8_t ctrl;
 uint8_t keypresses[256];
 
 #define BUFFLEN 128
@@ -118,6 +120,10 @@ static void poll_keyboard_input() {
             // right
             shift = shift & 0x01;
         }
+        else if(pressedbyte == 0x1D) {
+            ctrl = 0;
+        }
+
         keypresses[pressedbyte] = 0;
         return;
     }
@@ -137,9 +143,21 @@ static void poll_keyboard_input() {
         shift = shift | 0x02;
         return;
     }
+    else if(byte == 0x1D) {
+        ctrl = 1;
+        return;
+    }
 
     const uint8_t *codes;
-    if(shift) {
+    if(ctrl) {
+        if(lower_ascii_codes[byte] == 'd') {
+            // Ctrl+d
+            kb_buff[kb_buff_hd] = EOT;
+            kb_buff_hd = next_hd;
+            return;
+        }
+    }
+    else if(shift) {
         codes = upper_ascii_codes;
     }
     else {

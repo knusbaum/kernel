@@ -20,8 +20,9 @@ long long tick = 0;
 extern uint32_t allocated_frames;
 extern uint32_t total_frames;
 extern uint32_t heap_free;
+extern uint32_t allocations;
 
-#define BUFFSIZE 59
+#define BUFFSIZE 77
 
 static void timer_callback(registers_t regs)
 {
@@ -47,6 +48,12 @@ static void timer_callback(registers_t regs)
         // H  e  a  p  -  F  r  e  e  :
 
         // 49 50 51 52 53 54 55 56 57 58 59
+        // 1  2  3  4  5  6  7  8  9  10
+
+        // 60 61 62 63 64 65 66 67
+        // A  l  l  o  c  s  :
+
+        // 68 69 70 71 72 73 74 75 76 77 78
         // 1  2  3  4  5  6  7  8  9  10 \0
 
         char statusbuffer[BUFFSIZE];
@@ -103,6 +110,17 @@ static void timer_callback(registers_t regs)
         }
         statusbuffer[47] = ' ';
         itos(heap_free, statusbuffer + 48, 11);
+
+        statusbuffer[58] = ' ';
+        char *allocs = "Allocs:";
+        i = 59;
+        while(*allocs != 0) {
+            statusbuffer[i++] = *allocs;
+            allocs++;
+        }
+        statusbuffer[66] = ' ';
+        itos(allocations, statusbuffer + 67, 11);
+
 
         terminal_set_status(statusbuffer);
     }

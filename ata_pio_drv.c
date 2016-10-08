@@ -2,6 +2,7 @@
 #include "port.h"
 #include "terminal.h"
 #include "kheap.h"
+#include "common.h"
 
 #define ATA_PRIMARY_DATA         0x1F0
 #define ATA_PRIMARY_ERR          0x1F1
@@ -80,9 +81,8 @@ uint8_t identify() {
     //uint8_t *buff = kmalloc(40960, 0, NULL);
     uint8_t buff[256 * 2];
     insw(ATA_PRIMARY_DATA, buff, 256);
-    terminal_writestring("We read it!\n");
+    terminal_writestring("Success. Disk is ready to go.\n");
     // We read it!
-    terminal_writestring("Returning!\n");
     return 1;
 }
 
@@ -153,13 +153,13 @@ void ata_pio_read28(uint32_t LBA, uint8_t sectorcount, uint8_t *target) {
  */
 
 void ata_pio_read48(uint64_t LBA, uint16_t sectorcount, uint8_t *target) {
-    terminal_writestring("Reading LBA: ");
-    terminal_write_dec(LBA);
-    terminal_writestring(" sectorcount: ");
-    terminal_write_dec(sectorcount);
-    terminal_writestring(" into memory @ ");
-    terminal_write_hex(target);
-    terminal_putchar('\n');
+//    terminal_writestring("Reading LBA: ");
+//    terminal_write_dec(LBA);
+//    terminal_writestring(" sectorcount: ");
+//    terminal_write_dec(sectorcount);
+//    terminal_writestring(" into memory @ ");
+//    terminal_write_hex(target);
+//    terminal_putchar('\n');
     // HARD CODE MASTER (for now)
     outb(ATA_PRIMARY_DRIVE_HEAD, 0x40);                     // Select master
     outb(ATA_PRIMARY_SECCOUNT, (sectorcount >> 8) & 0xFF ); // sectorcount high
@@ -195,13 +195,13 @@ void ata_pio_read48(uint64_t LBA, uint16_t sectorcount, uint8_t *target) {
 /**
  * To write sectors in 48 bit PIO mode, send command "WRITE SECTORS EXT" (0x34), instead.
  * (As before, do not use REP OUTSW when writing.) And remember to do a Cache Flush after
- * each write command completes. 
+ * each write command completes.
  */
 void ata_pio_write48(uint64_t LBA, uint16_t sectorcount, uint8_t *target) {
-    terminal_writestring("Writing ");
-    terminal_write_hex(sectorcount);
-    terminal_writestring(" sectors.\n");
-    
+//    terminal_writestring("Writing ");
+//    terminal_write_hex(sectorcount);
+//    terminal_writestring(" sectors.\n");
+
     // HARD CODE MASTER (for now)
     outb(ATA_PRIMARY_DRIVE_HEAD, 0x40);                     // Select master
     outb(ATA_PRIMARY_SECCOUNT, (sectorcount >> 8) & 0xFF ); // sectorcount high
@@ -214,15 +214,18 @@ void ata_pio_write48(uint64_t LBA, uint16_t sectorcount, uint8_t *target) {
     outb(ATA_PRIMARY_LBA_HI, (LBA >> 16) & 0xFF);           // LBA3
     outb(ATA_PRIMARY_COMM_REGSTAT, 0x34);                   // READ SECTORS EXT
 
-    terminal_writestring("Writing ");
-    terminal_write_dec(sectorcount);
-    terminal_writestring(" sectors.\n");
-    
+//    terminal_writestring("Writing ");
+//    terminal_write_dec(sectorcount);
+//    terminal_writestring(" sectors.\n");
+
     uint8_t i;
     for(i = 0; i < sectorcount; i++) {
-        terminal_writestring("Looping for data write: ");
-        terminal_write_dec(i);
-        terminal_putchar('\n');
+//        terminal_writestring("Writing sector ");
+//        terminal_write_dec(i);
+//        terminal_writestring(" of ");
+//        terminal_write_dec(sectorcount);
+//        terminal_putchar('\n');
+
         // POLL!
         while(1) {
             uint8_t status = inb(ATA_PRIMARY_COMM_REGSTAT);
@@ -230,12 +233,15 @@ void ata_pio_write48(uint64_t LBA, uint16_t sectorcount, uint8_t *target) {
                 // Drive is ready to transfer data!
                 break;
             }
+            else if(status & STAT_ERR) {
+                PANIC("DISK SET ERROR STATUS!");
+            }
             //terminal_writestring("Polling for drive ready.\n");
         }
         //terminal_writestring("Transfering data!\n");
         // Transfer the data!
         outsw(ATA_PRIMARY_DATA, (void *)target, 256);
-        terminal_writestring("Done transfering!\n");
+        //terminal_writestring("Done transfering!\n");
         target += 256;
     }
 

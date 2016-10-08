@@ -1,3 +1,8 @@
+#ifndef FAT32_H
+#define FAT32_H
+
+#include <stdint.h>
+
 struct bios_parameter_block {
     uint16_t bytes_per_sector;          // IMPORTANT
     uint8_t sectors_per_cluster;        // IMPORTANT
@@ -66,3 +71,5 @@ void delFile(f32 *fs, struct directory *dir, char *filename);
 
 void print_directory(f32 *fs, struct directory *dir);
 uint32_t count_free_clusters(f32 *fs);
+
+#endif

@@ -58,6 +58,23 @@ int strcmp(const char *s1, const char *s2) {
     return 0;
 }
 
+int coerce_int(char *s, uint32_t *val) {
+    uint32_t result = 0;
+
+    while(*s && *s != '\n') {
+        if(*s >= 48 && *s <= 57) {
+            result *= 10;
+            result = result + (*s - 48);
+        }
+        else {
+            return 0;
+        }
+        s++;
+    }
+    *val = result;
+    return 1;
+}
+
 void PANIC(char *err) {
     terminal_set_cursor(0, 1);
     terminal_setcolor(make_color(COLOR_DARK_GREY, COLOR_BLACK));

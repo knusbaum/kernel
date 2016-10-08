@@ -6,6 +6,7 @@
 
 #define ESC (0x1B)
 #define BS  (0x08)
+#define EOT (0x04)
 
 /* Hardware text mode color constants. */
 enum vga_color
