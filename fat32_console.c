@@ -14,8 +14,9 @@ int fat32_console(f32 *fs) {
     terminal_writestring("Done reading root directory.\n");
 
     uint32_t bufflen = 24;
-    terminal_writestring("Entering command line!\n");
+    terminal_writestring("Entering command line!\n\n");
 
+    terminal_writestring("Root directory:\n");
     print_directory(fs, &dir);
     terminal_writestring("Hello! Type 'help' to see available commands.\n");
 

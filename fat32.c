@@ -684,6 +684,7 @@ void delFile(f32 *fs, struct directory *dir, char *filename) { //struct dir_entr
                     putCluster(fs, root_cluster + fs->cluster_size, secondcluster);
                 }
                 zero_FAT_chain(fs, target_dirent.first_cluster);
+                kfree(target_dirent.name);
                 return;
             }
             else {
@@ -693,6 +694,7 @@ void delFile(f32 *fs, struct directory *dir, char *filename) { //struct dir_entr
                     cluster = secondcluster;
                 }
             }
+            kfree(target_dirent.name);
 
         }
         cluster = get_next_cluster_id(fs, cluster);
@@ -832,8 +834,10 @@ void mkdir(f32 *fs, struct directory *dir, char *dirname) {
             struct directory newsubdir;
             populate_dir(fs, &newsubdir, subdir.entries[i].first_cluster);
             mkdir_subdirs(fs, &newsubdir, subdir.cluster);
+            free_directory(fs, &newsubdir);
         }
     }
+    free_directory(fs, &subdir);
 }
 
 void print_directory(f32 *fs, struct directory *dir) {
