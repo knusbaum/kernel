@@ -3,10 +3,11 @@
 #include "fat32.h"
 #include "keyboard.h"
 #include "terminal.h"
+#include "kheap.h"
 
 int handle_commands(f32 *fs, struct directory *dir, char *buffer);
 
-int fat32_console(f32 *fs) {
+void fat32_console(f32 *fs) {
 
     terminal_writestring("Reading root directory.\n");
     struct directory dir;
@@ -23,7 +24,7 @@ int fat32_console(f32 *fs) {
     char buffer[bufflen + 1];
     while(1) {
         terminal_writestring(">> ");
-        int i;
+        uint32_t i;
         for(i = 0; i < bufflen; i++) {
             char c = get_ascii_char();
             if(c == BS) {
@@ -58,7 +59,7 @@ int fat32_console(f32 *fs) {
             continue;
         }
 
-        int x;
+        uint32_t x;
         int scanned = coerce_int(buffer, &x);
         if(scanned == 0) {
             int command_ret = handle_commands(fs, &dir, buffer);
@@ -86,7 +87,7 @@ int fat32_console(f32 *fs) {
             continue;
         }
         else {
-            char *file = readFile(fs, &dir.entries[x]);
+            uint8_t *file = readFile(fs, &dir.entries[x]);
             for(i = 0; i < dir.entries[x].file_size; i++) {
                 terminal_putchar(file[i]);
             }
@@ -108,13 +109,13 @@ void do_delete(f32 *fs, struct directory *dir, char *filename) {
     terminal_writestring("do_delete(");
     terminal_writestring(filename);
     terminal_writestring(")\n");
-    int i;
+    uint32_t i;
     for(i = 0; i < dir->num_entries; i++) {
         if(strcmp(filename, dir->entries[i].name) == 0) {
             if(dir->entries[i].dir_attrs & DIRECTORY) {
                 struct directory subdir;
                 populate_dir(fs, &subdir, dir->entries[i].first_cluster);
-                int j;
+                uint32_t j;
                 for(j = 0; j < subdir.num_entries; j++) {
                     // Delete these last!
                     if(strcmp(subdir.entries[j].name, ".") == 0) {
@@ -152,7 +153,7 @@ void do_delete(f32 *fs, struct directory *dir, char *filename) {
 }
 
 void do_cat(f32 *fs, struct directory *dir, char *filename) {
-    int i;
+    uint32_t i;
     for(i = 0; i < dir->num_entries; i++) {
         if(strcmp(filename, dir->entries[i].name) == 0) {
             terminal_writestring("File already exists. del the file first.\n");
@@ -164,7 +165,7 @@ void do_cat(f32 *fs, struct directory *dir, char *filename) {
     uint32_t index = 0;
     uint32_t buffsize = 1024;
     uint32_t currlinelen = 0;
-    char *file = kmalloc(buffsize);
+    uint8_t *file = kmalloc(buffsize);
     while(1) {
         char c = get_ascii_char();
         if(c == EOT) {
@@ -193,11 +194,10 @@ void do_cat(f32 *fs, struct directory *dir, char *filename) {
 }
 
 void do_touch(f32 *fs, struct directory *dir, char *filename) {
-    writeFile(fs, dir, "", filename, 0);
+    writeFile(fs, dir, (uint8_t *)"", filename, 0);
 }
 
 int scan_command(char *buffer, char **comm, char **fname) {
-    int commlen = 0;
     char *buffscan = buffer;
     if(!*buffscan) {
         // There's nothing in the buffer.

@@ -221,7 +221,7 @@ void *krealloc(void *p, uint32_t size) {
     if(p == NULL) {
         return kmalloc(size);
     }
-    struct header *header = ((char *)p) - sizeof (struct header);
+    struct header *header = (struct header *)((char *)p) - sizeof (struct header);
     void *newchunk = kmalloc(size);
     if(newchunk == NULL) return NULL; // Don't know if this can actually happen
 

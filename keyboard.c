@@ -250,6 +250,8 @@ void initialize_keyboard() {
 }
 
 extern void pause();
+extern void sys_cli();
+extern void sys_sti();
 
 // This can race with the keyboard_handler, so we have to stop interrupts while we check stuff.
 char get_ascii_char() {

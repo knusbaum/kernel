@@ -15,7 +15,7 @@ void *memset(void *p, int c, size_t count)
 void *memcpy(void *dest, const void *src, size_t n) {
 
     char *cdest = dest;
-    char *csrc = src;
+    const char *csrc = src;
 
     size_t i;
     for(i = 0; i < n; i++) {

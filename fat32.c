@@ -473,6 +473,7 @@ f32 *makeFilesystem(char *fatSystem) {
 }
 
 void destroyFilesystem(f32 *fs) {
+    terminal_writestring("Destroying filesystem.\n");
     flushFAT(fs);
 //    fflush(fs->f);
 //    fclose(fs->f);
