@@ -93,5 +93,6 @@ int sprintf(char *str, char *fmt, ...) {
             break;
         }
     }
+    *str++ = 0;
     return 0;
 }
