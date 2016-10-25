@@ -2,28 +2,28 @@
 #include "common.h"
 #include "fat32.h"
 #include "keyboard.h"
-#include "terminal.h"
 #include "kheap.h"
+#include "kernio.h"
 
 int handle_commands(f32 *fs, struct directory *dir, char *buffer);
 
 void fat32_console(f32 *fs) {
 
-    terminal_writestring("Reading root directory.\n");
+    printf("Reading root directory.\n");
     struct directory dir;
     populate_root_dir(fs, &dir);
-    terminal_writestring("Done reading root directory.\n");
+    printf("Done reading root directory.\n");
 
     uint32_t bufflen = 24;
-    terminal_writestring("Entering command line!\n\n");
+    printf("Entering command line!\n\n");
 
-    terminal_writestring("Root directory:\n");
+    printf("Root directory:\n");
     print_directory(fs, &dir);
-    terminal_writestring("Hello! Type 'help' to see available commands.\n");
+    printf("Hello! Type 'help' to see available commands.\n");
 
     char buffer[bufflen + 1];
     while(1) {
-        terminal_writestring(">> ");
+        printf(">> ");
         uint32_t i;
         for(i = 0; i < bufflen; i++) {
             char c = get_ascii_char();
@@ -32,7 +32,7 @@ void fat32_console(f32 *fs) {
                     i--;
                     continue;
                 }
-                terminal_putchar(c);
+                printf("%c", c);
                 i-=2;
                 continue;
             }
@@ -40,14 +40,14 @@ void fat32_console(f32 *fs) {
                 i--;
                 continue;
             }
-            terminal_putchar(c);
-            
+            printf("%c", c);
+
             buffer[i] = c;
             if(c == '\n') break;
         }
 
         if(i == bufflen) {
-            terminal_writestring("Input too long.\n");
+            printf("Input too long.\n");
             while(get_ascii_char() != '\n');
             continue;
         }
@@ -64,7 +64,7 @@ void fat32_console(f32 *fs) {
         if(scanned == 0) {
             int command_ret = handle_commands(fs, &dir, buffer);
             if(!command_ret) {
-                terminal_writestring("Invalid input. Enter a number or command.\n");
+                printf("Invalid input. Enter a number or command.\n");
             }
             else if(command_ret == -1) {
                 break;
@@ -73,7 +73,7 @@ void fat32_console(f32 *fs) {
         }
 
         if(dir.num_entries <= x) {
-            terminal_writestring("Invalid selection.\n");
+            printf("Invalid selection.\n");
             continue;
         }
 
@@ -89,12 +89,12 @@ void fat32_console(f32 *fs) {
         else {
             uint8_t *file = readFile(fs, &dir.entries[x]);
             for(i = 0; i < dir.entries[x].file_size; i++) {
-                terminal_putchar(file[i]);
+                printf("%c", file[i]);
             }
             kfree(file);
         }
     }
-    terminal_writestring("Shutting down filesystem.\n");
+    printf("Shutting down filesystem.\n");
     free_directory(fs, &dir);
     destroyFilesystem(fs);
 }
@@ -106,9 +106,7 @@ struct bytes {
 };
 
 void do_delete(f32 *fs, struct directory *dir, char *filename) {
-    terminal_writestring("do_delete(");
-    terminal_writestring(filename);
-    terminal_writestring(")\n");
+    printf("do_delete(%s)\n", filename);
     uint32_t i;
     for(i = 0; i < dir->num_entries; i++) {
         if(strcmp(filename, dir->entries[i].name) == 0) {
@@ -156,11 +154,11 @@ void do_cat(f32 *fs, struct directory *dir, char *filename) {
     uint32_t i;
     for(i = 0; i < dir->num_entries; i++) {
         if(strcmp(filename, dir->entries[i].name) == 0) {
-            terminal_writestring("File already exists. del the file first.\n");
+            printf("File already exists. del the file first.\n");
             return;
         }
     }
-    terminal_writestring("Ctrl+D to end file.\n");
+    printf("Ctrl+D to end file.\n");
 
     uint32_t index = 0;
     uint32_t buffsize = 1024;
@@ -171,7 +169,7 @@ void do_cat(f32 *fs, struct directory *dir, char *filename) {
         if(c == EOT) {
             break;
         }
-        terminal_putchar(c);
+        printf("%c", c);
         if(c == BS) {
             if(currlinelen > 0) {
                 index--;
@@ -216,7 +214,7 @@ int scan_command(char *buffer, char **comm, char **fname) {
 
     // Point comm at the first non-whitespace character.
     *comm = buffscan;
-    
+
     // Find a space.
     while(*buffscan && *buffscan != ' ') {
         buffscan++;
@@ -229,7 +227,7 @@ int scan_command(char *buffer, char **comm, char **fname) {
     // Terminate the string.
     *buffscan = 0;
     buffscan++;
-    
+
     // skip any whitespace
     while(*buffscan && *buffscan == ' ') {
         buffscan++;
@@ -255,18 +253,16 @@ int handle_commands(f32 *fs, struct directory *dir, char *buffer) {
     char *command = NULL;
     char *filename = NULL;
     int scanned = scan_command(buffer, &command, &filename);
-    if(scanned == 0) { terminal_writestring("Failed to parse command.\n"); return 0; }
-    
+    if(scanned == 0) { printf("Failed to parse command.\n"); return 0; }
+
     int ret = 0;
     if(strcmp(command, "mkdir") == 0) {
         if(filename != NULL && strlen(filename) > 0) {
-            terminal_writestring("Making directory [");
-            terminal_writestring(filename);
-            terminal_writestring("].\n");
+            printf("Making directory [%s].\n", filename);
             mkdir(fs, dir, filename);
         }
         else {
-            terminal_writestring("Need a directory name.\n");
+            printf("Need a directory name.\n");
         }
         ret = 1;
     }
@@ -281,7 +277,7 @@ int handle_commands(f32 *fs, struct directory *dir, char *buffer) {
             do_delete(fs, dir, filename);
         }
         else {
-            terminal_writestring("Need a file/directory name.\n");
+            printf("Need a file/directory name.\n");
         }
         ret = 1;
     }
@@ -290,30 +286,28 @@ int handle_commands(f32 *fs, struct directory *dir, char *buffer) {
             do_cat(fs, dir, filename);
         }
         else {
-            terminal_writestring("Need a filename.\n");
+            printf("Need a filename.\n");
         }
         ret = 1;
     }
     if(strcmp(command, "freeclusters") == 0) {
-        terminal_writestring("Free clusters in FAT: ");
-        terminal_write_dec(count_free_clusters(fs));
-        terminal_putchar('\n');
+        printf("Free clusters in FAT: %d\n", count_free_clusters(fs));
         ret = 1;
     }
     if(strcmp(command, "exit") == 0) {
-        terminal_writestring("See ya!\n");
+        printf("See ya!\n");
         ret = -1;
     }
     if(strcmp(command, "help") == 0) {
-        terminal_writestring("Commands are: \n");
-        terminal_writestring("\t[a number] -> a number corresponding with a file or directory will print that file or enter that directory.\n");
-        terminal_writestring("\t(return) -> pressing return without entering a command will list the current directory. Entries marked with a 'D' next to their names are directories.\n");
-        terminal_writestring("\tmkdir [dirname] -> Create a directory in the current directory.\n");
-        terminal_writestring("\ttouch [filename] -> Create an empty file in the current directory.\n");
-        terminal_writestring("\tcat [filename] -> Creates a file named 'filename' and lets you type into it. Ctrl+D ends the file.\n");
-        terminal_writestring("\tdel [filename | dirname] -> Delete a file or (recursively) a directory.\n");
-        terminal_writestring("\tfreeclusters -> Count the free clusters available in the filesystem.\n");
-        terminal_writestring("\texit -> Exit the FAT32 shell. This gracefully closes the filesystem. Always do this before shutting down the kernel.\n");
+        printf("Commands are: \n");
+        printf("\t[a number] -> a number corresponding with a file or directory will print that file or enter that directory.\n");
+        printf("\t(return) -> pressing return without entering a command will list the current directory. Entries marked with a 'D' next to their names are directories.\n");
+        printf("\tmkdir [dirname] -> Create a directory in the current directory.\n");
+        printf("\ttouch [filename] -> Create an empty file in the current directory.\n");
+        printf("\tcat [filename] -> Creates a file named 'filename' and lets you type into it. Ctrl+D ends the file.\n");
+        printf("\tdel [filename | dirname] -> Delete a file or (recursively) a directory.\n");
+        printf("\tfreeclusters -> Count the free clusters available in the filesystem.\n");
+        printf("\texit -> Exit the FAT32 shell. This gracefully closes the filesystem. Always do this before shutting down the kernel.\n");
         ret = 1;
     }
     free_directory(fs, dir);

@@ -1,6 +1,6 @@
 #include "pic.h"
 #include "port.h"
-#include "terminal.h"
+#include "kernio.h"
 
 #define MASTER_COMMAND 0x20
 #define MASTER_DATA 0x21
@@ -31,8 +31,7 @@ unsigned int io_wait()
 
 void remap_pic(void)
 {
-    terminal_writestring("Remapping the IRQ table\n");
-
+    printf("Remapping the IRQ table\n");
 
     outb(MASTER_COMMAND, ICW1_INIT | ICW1_ICW4); // Start initialization sequence
     outb(SLAVE_COMMAND, ICW1_INIT | ICW1_ICW4);  // Start initialization sequence
@@ -46,26 +45,4 @@ void remap_pic(void)
 
     outb(MASTER_DATA, 0x0);
     outb(SLAVE_DATA, 0x0);
-
-    /*
-      outb(0x20, 0x11);
-      io_wait();
-      outb(0xA0, 0x11);
-      io_wait();
-      outb(0x21, 0x20);
-      io_wait();
-      outb(0xA1, 0x28);
-      io_wait();
-      outb(0x21, 0x04);
-      io_wait();
-      outb(0xA1, 0x02);
-      io_wait();
-      outb(0x21, 0x01);
-      io_wait();
-      outb(0xA1, 0x01);
-      io_wait();
-      outb(0x21, 0x0);
-      io_wait();
-      outb(0xA1, 0x0);
-    */
 }

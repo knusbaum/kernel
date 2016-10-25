@@ -1,5 +1,5 @@
 #include "common.h"
-#include "terminal.h"
+#include "kernio.h"
 
 extern void halt();
 
@@ -75,11 +75,46 @@ int coerce_int(char *s, uint32_t *val) {
     return 1;
 }
 
+uint8_t hex_char(uint8_t byte)
+{
+    byte = byte & 0x0F;
+    if(byte < 0xA)
+    {
+        char buff[2];
+        itos(byte, buff, 2);
+        return buff[0];
+    }
+    else
+    {
+        switch(byte)
+        {
+        case 0x0A:
+            return 'A';
+            break;
+        case 0x0B:
+            return 'B';
+            break;
+        case 0x0C:
+            return 'C';
+            break;
+        case 0x0D:
+            return 'D';
+            break;
+        case 0x0E:
+            return 'E';
+            break;
+        case 0x0F:
+            return 'F';
+            break;
+        }
+    }
+    return 0;
+}
+
 void PANIC(char *err) {
     terminal_set_cursor(0, 1);
     terminal_setcolor(make_color(COLOR_DARK_GREY, COLOR_BLACK));
     terminal_settextcolor(make_color(COLOR_RED, COLOR_BLACK));
-    terminal_writestring("PANIC: ");
-    terminal_writestring(err);
+    printf("PANIC: %s", err);
     halt();
 }

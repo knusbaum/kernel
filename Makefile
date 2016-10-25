@@ -20,7 +20,8 @@ OBJECTS=terminal.o \
 	keyboard.o \
 	ata_pio_drv.o \
 	fat32.o \
-	fat32_console.o
+	fat32_console.o \
+	kernio.o
 
 CFLAGS = -ggdb -m32 -O0 -Wall -Wextra -std=gnu99 -ffreestanding
 AFLAGS = --32 -ggdb
@@ -105,3 +106,6 @@ fat32.o : fat32.c fat32.h
 
 fat32_console.o : fat32_console.c fat32_console.h
 	$(CC) $(CFLAGS) -c fat32_console.c -o fat32_console.o
+
+kernio.o : kernio.c kernio.h terminal.h
+	$(CC) $(CFLAGS) -c kernio.c -o kernio.o

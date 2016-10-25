@@ -1,6 +1,6 @@
 #include "stdint.h"
 #include "keyboard.h"
-#include "terminal.h"
+#include "kernio.h"
 #include "isr.h"
 #include "port.h"
 
@@ -177,76 +177,74 @@ void keyboard_handler(registers_t regs) {
 }
 
 void initialize_keyboard() {
-    terminal_writestring("Initializing keyboard.\n");
+    printf("Initializing keyboard.\n");
 
     uint8_t status = inb(0x64);
     if(status & (1 << 0)) {
-        terminal_writestring("Output buffer full.\n");
+        printf("Output buffer full.\n");
     }
     else {
-        terminal_writestring("Output buffer empty.\n");
+        printf("Output buffer empty.\n");
     }
 
     if(status & (1 << 1)) {
-        terminal_writestring("Input buffer full.\n");
+        printf("Input buffer full.\n");
     }
     else {
-        terminal_writestring("Input buffer empty.\n");
+        printf("Input buffer empty.\n");
     }
 
     if(status & (1 << 2)) {
-        terminal_writestring("System flag set.\n");
+        printf("System flag set.\n");
     }
     else {
-        terminal_writestring("System flag unset.\n");
+        printf("System flag unset.\n");
     }
 
     if(status & (1 << 3)) {
-        terminal_writestring("Command/Data -> PS/2 device.\n");
+        printf("Command/Data -> PS/2 device.\n");
     }
     else {
-        terminal_writestring("Command/Data -> PS/2 controller.\n");
+        printf("Command/Data -> PS/2 controller.\n");
     }
 
     if(status & (1 << 6)) {
-        terminal_writestring("Timeout error.\n");
+        printf("Timeout error.\n");
     }
     else {
-        terminal_writestring("No timeout error.\n");
+        printf("No timeout error.\n");
     }
 
     if(status & (1 << 7)) {
-        terminal_writestring("Parity error.\n");
+        printf("Parity error.\n");
     }
     else {
-        terminal_writestring("No parity error.\n");
+        printf("No parity error.\n");
     }
 
     // Test the controller.
     outb(0x64, 0xAA);
     uint8_t result = inb(0x60);
     if(result == 0x55) {
-        terminal_writestring("PS/2 controller test passed.\n");
+        printf("PS/2 controller test passed.\n");
     }
     else if(result == 0xFC) {
-        terminal_writestring("PS/2 controller test failed!\n");
+        printf("PS/2 controller test failed!\n");
         return;
     }
     else {
-        terminal_writestring("PS/2 controller responded to test with unknown code.\n");
+        printf("PS/2 controller responded to test with unknown code.\n");
         return;
     }
 
     // Check the PS/2 controller configuration byte.
     outb(0x64, 0x20);
     result = inb(0x60);
-    terminal_writestring("PS/2 config byte: ");
-    terminal_write_hex(result);
-    terminal_putchar('\n');
+    printf("PS/2 config byte: %x\n", result);
 
     register_interrupt_handler(IRQ1, keyboard_handler);
 
-    terminal_writestring("Keyboard ready to go!\n\n");
+    printf("Keyboard ready to go!\n\n");
 }
 
 extern void pause();

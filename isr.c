@@ -5,7 +5,7 @@
 
 #include "isr.h"
 #include "idt.h"
-#include "terminal.h"
+#include "kernio.h"
 #include "pic.h"
 #include "port.h"
 #include <stdint.h>
@@ -23,18 +23,13 @@ void isr_handler(registers_t regs)
 {
     if(regs.int_no == GENERAL_PROTECTION_FAULT)
     {
-        terminal_writestring("General Protection Fault. Code: ");
-        terminal_write_dec(regs.err_code);
-        halt();
+        printf("General Protection Fault. Code: %d", regs.err_code);
+        PANIC("General Protection Fault!");
     }
-
-//    terminal_writestring("Received interrupt: ");
-//    terminal_write_dec(regs.int_no);
-//    terminal_writestring("\n");
 
     if(interrupt_handlers[regs.int_no])
     {
-        terminal_writestring("Handling!\n");
+        printf("Handling!\n");
         interrupt_handlers[regs.int_no](regs);
     }
 }

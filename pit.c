@@ -1,7 +1,7 @@
 #include "pit.h"
 #include "isr.h"
 #include "port.h"
-#include "terminal.h"
+#include "kernio.h"
 
 #define PIT_NATURAL_FREQ 1193180
 
@@ -32,103 +32,114 @@ static void timer_callback(registers_t regs)
     {
         tick++;
 
-        // This whole thing below is sort of ugly and hacky
-        // but I guess it works for now.
-
-        // 1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19
-        // F  r  a  m  e  s  :     1  2  3  4  5  6  7  8  9  10
-
-        // 20 21 22 23 24 25 26 27 28 29 30 31 32 33
-        // M  e  m  :  x  x  x  x  /  x  x  x  x
-
-        // 34 35 36 37
-        // M  i  B
-
-        // 38 39 40 41 42 43 44 45 46 47 48
-        // H  e  a  p  -  F  r  e  e  :
-
-        // 49 50 51 52 53 54 55 56 57 58 59
-        // 1  2  3  4  5  6  7  8  9  10
-
-        // 60 61 62 63 64 65 66 67
-        // A  l  l  o  c  s  :
-
-        // 68 69 70 71 72 73 74 75 76 77 78
-        // 1  2  3  4  5  6  7  8  9  10 \0
-
-        char statusbuffer[BUFFSIZE];
-        int i = 0;
-        for(; i < BUFFSIZE; i++) {
-            statusbuffer[i] = ' ';
-        }
-
-        char *ticks = "Frames: ";
-        i = 0;
-        while(*ticks != 0) {
-            statusbuffer[i++] = *ticks;
-            ticks++;
-        }
-        itos(allocated_frames, statusbuffer + 8, 11);
-        statusbuffer[18] = ' ';
-
-        char *mem = "Mem: ";
-        i = 19;
-        while(*mem != 0) {
-            statusbuffer[i++] = *mem;
-            mem++;
-        }
-
         uint32_t used = (allocated_frames * 0x1000) / 1024 / 1024;
         uint32_t available = (total_frames * 0x1000) / 1024 / 1024;
 
-        if(available - used < 512) {
-            terminal_set_status_color(make_color(COLOR_BLACK, COLOR_RED));
-        }
-        else {
-            terminal_set_status_color(normal_color);
-        }
-
-        itos(used, statusbuffer + 23, 5);
-        statusbuffer[27] = '/';
-        itos(available, statusbuffer + 28, 5);
-        statusbuffer[32] = ' ';
-
-        char *mib = "MiB";
-        i = 33;
-        while(*mib != 0) {
-            statusbuffer[i++] = *mib;
-            mib++;
-        }
-
-        statusbuffer[36] = ' ';
-
-        char *heapfree = "Heap-Free:";
-        i = 37;
-        while(*heapfree != 0) {
-            statusbuffer[i++] = *heapfree;
-            heapfree++;
-        }
-        statusbuffer[47] = ' ';
-        itos(heap_free, statusbuffer + 48, 11);
-
-        statusbuffer[58] = ' ';
-        char *allocs = "Allocs:";
-        i = 59;
-        while(*allocs != 0) {
-            statusbuffer[i++] = *allocs;
-            allocs++;
-        }
-        statusbuffer[66] = ' ';
-        itos(allocations, statusbuffer + 67, 11);
-
-
-        terminal_set_status(statusbuffer);
+        char buffer[BUFFSIZE];
+        sprintf(buffer, "Frames: %d Mem: %d/%d MiB Heap-Free: %d Allocs: %d",
+               allocated_frames,
+               used, available,
+               heap_free,
+               allocations);
+        terminal_set_status(buffer);
+//        // This whole thing below is sort of ugly and hacky
+//        // but I guess it works for now.
+//
+//        // 1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19
+//        // F  r  a  m  e  s  :     1  2  3  4  5  6  7  8  9  10
+//
+//        // 20 21 22 23 24 25 26 27 28 29 30 31 32 33
+//        // M  e  m  :  x  x  x  x  /  x  x  x  x
+//
+//        // 34 35 36 37
+//        // M  i  B
+//
+//        // 38 39 40 41 42 43 44 45 46 47 48
+//        // H  e  a  p  -  F  r  e  e  :
+//
+//        // 49 50 51 52 53 54 55 56 57 58 59
+//        // 1  2  3  4  5  6  7  8  9  10
+//
+//        // 60 61 62 63 64 65 66 67
+//        // A  l  l  o  c  s  :
+//
+//        // 68 69 70 71 72 73 74 75 76 77 78
+//        // 1  2  3  4  5  6  7  8  9  10 \0
+//
+//
+//        char statusbuffer[BUFFSIZE];
+//        int i = 0;
+//        for(; i < BUFFSIZE; i++) {
+//            statusbuffer[i] = ' ';
+//        }
+//
+//        char *ticks = "Frames: ";
+//        i = 0;
+//        while(*ticks != 0) {
+//            statusbuffer[i++] = *ticks;
+//            ticks++;
+//        }
+//        itos(allocated_frames, statusbuffer + 8, 11);
+//        statusbuffer[18] = ' ';
+//
+//        char *mem = "Mem: ";
+//        i = 19;
+//        while(*mem != 0) {
+//            statusbuffer[i++] = *mem;
+//            mem++;
+//        }
+//
+//        uint32_t used = (allocated_frames * 0x1000) / 1024 / 1024;
+//        uint32_t available = (total_frames * 0x1000) / 1024 / 1024;
+//
+//        if(available - used < 512) {
+//            terminal_set_status_color(make_color(COLOR_BLACK, COLOR_RED));
+//        }
+//        else {
+//            terminal_set_status_color(normal_color);
+//        }
+//
+//        itos(used, statusbuffer + 23, 5);
+//        statusbuffer[27] = '/';
+//        itos(available, statusbuffer + 28, 5);
+//        statusbuffer[32] = ' ';
+//
+//        char *mib = "MiB";
+//        i = 33;
+//        while(*mib != 0) {
+//            statusbuffer[i++] = *mib;
+//            mib++;
+//        }
+//
+//        statusbuffer[36] = ' ';
+//
+//        char *heapfree = "Heap-Free:";
+//        i = 37;
+//        while(*heapfree != 0) {
+//            statusbuffer[i++] = *heapfree;
+//            heapfree++;
+//        }
+//        statusbuffer[47] = ' ';
+//        itos(heap_free, statusbuffer + 48, 11);
+//
+//        statusbuffer[58] = ' ';
+//        char *allocs = "Allocs:";
+//        i = 59;
+//        while(*allocs != 0) {
+//            statusbuffer[i++] = *allocs;
+//            allocs++;
+//        }
+//        statusbuffer[66] = ' ';
+//        itos(allocations, statusbuffer + 67, 11);
+//
+//
+//        terminal_set_status(statusbuffer);
     }
 }
 
 void init_timer(uint32_t frequency)
 {
-    terminal_writestring("Initializing PIT timer\n");
+    printf("Initializing PIT timer\n");
     register_interrupt_handler(IRQ0, &timer_callback);
 
     normal_color = make_color(COLOR_WHITE, COLOR_BLACK);

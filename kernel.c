@@ -14,6 +14,7 @@
 #include "keyboard.h"
 #include "fat32.h"
 #include "fat32_console.h"
+#include "kernio.h"
 
 /* This tutorial will only work for the 32-bit ix86 targets. */
 #if !defined(__i386__)
@@ -32,10 +33,7 @@ void kernel_main(struct multiboot_info *mi)
 {
     terminal_initialize(make_color(COLOR_DARK_GREY, COLOR_WHITE));
     terminal_set_status_color(make_color(COLOR_WHITE, COLOR_BLACK));
-    terminal_writestring("Booting kernel.\n");
-    terminal_writestring("Have: ");
-    terminal_write_dec(mi->mem_upper * 1024);
-    terminal_writestring(" bytes of memory above 1MiB.\n");
+    printf("Booting kernel.\nHave: %d bytes of memory above 1MiB.\n", mi->mem_upper * 1024);
 
     uint32_t low_pages = 256; // 1024 * 1024 bytes / 4096
     uint32_t high_pages = (mi->mem_upper * 1024) / 4096;
@@ -54,25 +52,25 @@ void kernel_main(struct multiboot_info *mi)
     initialize_paging(total_frames);
 
     malloc_stats();
-    terminal_writestring("Done setting up paging.\nKernel is ready to go!!!\n\n");
+    printf("Done setting up paging.\nKernel is ready to go!!!\n\n");
     terminal_settextcolor(make_color(COLOR_BLUE, COLOR_WHITE));
     // Kernel ready to go!
 
-    terminal_writestring("Creating fat32 filesystem.\n");
+    printf("Creating fat32 filesystem.\n");
     f32 *fs = makeFilesystem("");
     if(fs == NULL) {
-        terminal_writestring("Failed to create fat32 filesystem. Disk may be corrupt.\n");
+        printf("Failed to create fat32 filesystem. Disk may be corrupt.\n");
         return;
     }
 
     fat32_console(fs);
 
-    terminal_writestring("FAT32 shell exited. It is safe to power off.\nSystem is in free-typing mode.\n");
+    printf("FAT32 shell exited. It is safe to power off.\nSystem is in free-typing mode.\n");
 
     while(1) {
         char c = get_ascii_char();
-        terminal_putchar(c);
+        printf("%c", c);
     };
-    terminal_writestring("Halting.\n");
+    printf("Halting.\n");
 
 }

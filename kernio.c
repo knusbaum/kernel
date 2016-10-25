@@ -1,0 +1,97 @@
+#include "kernio.h"
+#include "terminal.h"
+#include "common.h"
+#include <stdarg.h>
+
+int printf(char *fmt, ...) {
+    va_list argp;
+    va_start(argp, fmt);
+
+    char *p;
+    for(p = fmt; *p != 0; p++) {
+        if(*p != '%') {
+            terminal_putchar(*p);
+            continue;
+        }
+        p++; // Skip the %
+        int i;
+        char *s;
+        switch(*p) {
+        case 'c':
+            i = va_arg(argp, int);
+            terminal_putchar(i);
+            break;
+        case 's':
+            s = va_arg(argp, char *);
+            terminal_writestring(s);
+            break;
+        case 'd':
+            i = va_arg(argp, int);
+            terminal_write_dec(i);
+            break;
+        case 'x':
+            i = va_arg(argp, int);
+            terminal_write_hex(i);
+            break;
+        case '%':
+            terminal_putchar('%');
+            break;
+        default:
+            terminal_putchar('%');
+            terminal_putchar(*p);
+            break;
+        }
+    }
+    return 0;
+}
+
+int sprintf(char *str, char *fmt, ...) {
+    va_list argp;
+    va_start(argp, fmt);
+
+    char *p;
+    for(p = fmt; *p != 0; p++) {
+        if(*p != '%') {
+            *str++ = *p;
+            continue;
+        }
+        p++; // Skip the %
+        int i;
+        char *s;
+        switch(*p) {
+        case 'c':
+            i = va_arg(argp, int);
+            *str++ = i;
+            break;
+        case 's':
+            s = va_arg(argp, char *);
+            while(*s) {
+                *str++ = *s++;
+            }
+            break;
+        case 'd':
+            i = va_arg(argp, int);
+            char decbuff[13]; // At most 12 decimal places for 32 bit int.
+            char *dec = itos(i, decbuff, 13);
+            while(*dec) {
+                *str++ = *dec++;
+            }
+            break;
+        case 'x':
+            i = va_arg(argp, int);
+            for(int j = 28; j >= 0; j-=4)
+            {
+                *str++ = hex_char(i>>j);
+            }
+            break;
+        case '%':
+            *str++ = '%';
+            break;
+        default:
+            *str++ = '%';
+            *str++ = *p;
+            break;
+        }
+    }
+    return 0;
+}

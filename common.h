@@ -14,6 +14,7 @@ size_t strlen(const char* str);
 int strcmp(const char *s1, const char *s2);
 
 int coerce_int(char *s, uint32_t *val);
+uint8_t hex_char(uint8_t byte);
 
 void PANIC(char *err);
 

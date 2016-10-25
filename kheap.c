@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include "common.h"
 #include "kheap.h"
-#include "terminal.h"
+#include "kernio.h"
 #include "isr.h"
 #include "paging.h"
 
@@ -34,28 +34,19 @@ uint32_t heap_free = 0;
 static void do_kfree(void *p);
 
 void malloc_stats() {
-    terminal_writestring("Heap starts @ ");
-    terminal_write_hex((uint32_t)memhead);
-    terminal_writestring(" ends @ ");
-    terminal_write_hex((uint32_t)memend);
-    terminal_writestring(" and contains ");
+    printf("Heap starts @ %x ends @ %x and contains ", memhead, memend);
 
     uint32_t bytes = memend - memhead;
     if(bytes / 1024 / 1024 > 0) {
-        terminal_write_dec(bytes / 1024 / 1024);
-        terminal_writestring(" MiB.\nCurrent allocations: [");
+        printf("%d MiB.\nCurrent allocations: [%d]\n", bytes / 1024 / 1024, allocations);
     }
     else if(bytes / 1024 > 0) {
-        terminal_write_dec(bytes / 1024);
-        terminal_writestring(" KiB.\nCurrent allocations: [");
+        printf("%d KiB.\nCurrent allocations: [%d]\n", bytes / 1024, allocations);
     }
     else {
-        terminal_write_dec(bytes / 1024);
-        terminal_writestring(" KiB.\nCurrent allocations: [");
+        printf("%d B.\nCurrent allocations: [%d]\n", bytes, allocations);
     }
 
-    terminal_write_dec(allocations);
-    terminal_writestring("]\nFree: [");
     uint32_t free = 0;
     struct free_header *current = head;
     while(current) {
@@ -64,16 +55,13 @@ void malloc_stats() {
     }
 
     if(free / 1024 / 1024 > 0) {
-        terminal_write_dec(free / 1024 / 1024);
-        terminal_writestring(" MiB]\n");
+        printf("Free: [%d MiB]\n", free / 1024 / 1024);
     }
     else if(free / 1024 > 0) {
-        terminal_write_dec(free / 1024);
-        terminal_writestring(" KiB]\n");
+        printf("Free: [%d KiB]\n", free / 1024);
     }
     else {
-        terminal_write_dec(free);
-        terminal_writestring(" Bytes]\n");
+        printf("Free: [%d Bytes]\n", free);
     }
 }
 

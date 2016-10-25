@@ -3,7 +3,7 @@
 #include "isr.h"
 #include "paging.h"
 #include "frame.h"
-#include "terminal.h"
+#include "kernio.h"
 #include "kmalloc_early.h"
 #include "common.h"
 #include "kheap.h"
@@ -25,7 +25,7 @@ void initialize_paging(uint32_t total_frames) {
     // Go ahead and allocate all the page tables for the kernel.
     // This is wasteful, but a lot easier than figuring out how to build
     // a kernel page allocator.
-    terminal_writestring("Allocating kernel page tables... ");
+    printf("Allocating kernel page tables... ");
     uint32_t i = 0;
     for(i = 0; i < 0xFFFFFFFF;) {
         get_page(i, 1, kernel_directory);
@@ -34,7 +34,7 @@ void initialize_paging(uint32_t total_frames) {
             break;
         }
     }
-    terminal_writestring("Done\n");
+    printf("Done\n");
 
     // We need to identity map (phys addr = virt addr) from
     // 0x0 to the end of used memory, so we can access this
@@ -151,13 +151,11 @@ void page_fault(registers_t regs)
     //int id = regs.err_code & 0x10;        // Caused by an instruction fetch?
 
     // Output an error message.
-    terminal_writestring("Page fault! ( ");
-    if (present) {terminal_writestring("present ");}
-    if (rw) {terminal_writestring("read-only ");}
-    if (us) {terminal_writestring("user-mode ");}
-    if (reserved) {terminal_writestring("reserved ");}
-    terminal_writestring(") at ");
-    terminal_write_hex(faulting_address);
-    terminal_writestring("\n");
+    printf("Page fault! ( ");
+    if (present) {printf("present ");}
+    if (rw) {printf("read-only ");}
+    if (us) {printf("user-mode ");}
+    if (reserved) {printf("reserved ");}
+    printf(") at %x\n", faulting_address);
     PANIC("Page fault");
 }

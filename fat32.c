@@ -1,20 +1,17 @@
-#include <stdio.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include <memory.h>
 #include <strings.h>
 #include <errno.h>
 #include <ctype.h>
 #include "fat32.h"
 #include "ata_pio_drv.h"
-#include "terminal.h"
 #include "kheap.h"
 #include "common.h"
+#include "kernio.h"
 
 int x;
 
 struct f32 {
-    FILE *f;
+    //FILE *f;
     uint32_t *FAT;
     struct bios_parameter_block bpb;
     uint32_t partition_begin_sector;
@@ -36,55 +33,14 @@ static void trim_spaces(char *c, int max) {
 }
 
 static void getSector(f32 *fs, uint8_t *buff, uint32_t sector, uint32_t count) {
-//    uint32_t readbytes = count * 512;
-//    fseek(fs->f, sector * 512, SEEK_SET);
-//    int readcount = 0;
-//    while(readcount < readbytes) {
-//        if(feof(fs->f) || ferror(fs->f)) {
-//            return;
-//        }
-//        readcount += fread(buff + readcount, 1, readbytes - readcount, fs->f);
-//    }
-//    terminal_writestring("Getting sector ");
-//    terminal_write_dec(sector);
-//    terminal_writestring(".\n");
     ata_pio_read48(sector, count, buff);
 }
 
 static void putSector(f32 *fs, uint8_t *buff, uint32_t sector, uint32_t count) {
-//    uint32_t writebytes = count * 512;
-//    fseek(fs->f, sector * 512, SEEK_SET);
-//    if(feof(fs->f)) {
-//        perror("EOF WHILE SEEKING!\n");
-//        exit(1);
-//    }
-//    else if(ferror(fs->f)) {
-//        perror("ERROR SEEKING!\n");
-//        exit(1);
-//    }
-//    int writecount = 0;
-//    while(writecount < writebytes) {
-//        if(feof(fs->f)) {
-//            perror("EOF WHILE WRITING!\n");
-//            exit(1);
-//        }
-//        else if(ferror(fs->f)) {
-//            perror("ERROR WRITING SECTOR! FS MAY BE CORRUPTED!\n");
-//            exit(1);
-//        }
-//        writecount += fwrite(buff + writecount, 1, writebytes - writecount, fs->f);
-//    }
-//    terminal_writestring("Putting sector ");
-//    terminal_write_dec(sector);
-//    terminal_writestring(" count: ");
-//    terminal_write_dec(count);
-//    terminal_writestring("\n");
-    //ata_pio_write48(sector, count, buff);
     uint32_t i;
     for(i = 0; i < count; i++) {
         ata_pio_write48(sector + i, 1, buff + (i * 512));
     }
-//    terminal_writestring("DONE!\n");
 }
 
 static void flushFAT(f32 *fs) {
@@ -354,10 +310,8 @@ static uint8_t *locate_entries(f32 *fs, uint8_t *cluster_buffer, struct director
 
         uint32_t next_cluster = fs->FAT[cluster];
         if(next_cluster >= 0x0FFFFFF8) {
-            //printf("We're out of space and there are no more clusters. We need to expand!\n");
             next_cluster = allocateCluster(fs);
             if(!next_cluster) {
-                //printf("Failed to allocate cluster. Disk full.\n");
                 return 0;
             }
             fs->FAT[cluster] = next_cluster;
@@ -433,11 +387,6 @@ static void write_long_filename_entries(uint8_t *start, uint32_t num_entries, ch
 
 f32 *makeFilesystem(char *fatSystem) {
     f32 *fs = kmalloc(sizeof (struct f32));
-//    fs->f = fopen(fatSystem, "r+");
-//    if(fs->f == NULL) {
-//        return NULL;
-//    }
-//    rewind(fs->f);
     if(!identify()) {
         return NULL;
     }
@@ -445,7 +394,6 @@ f32 *makeFilesystem(char *fatSystem) {
 
     trim_spaces(fs->bpb.system_id, 8);
     if(strcmp(fs->bpb.system_id, "FAT32") != 0) {
-        //fclose(fs->f);
         kfree(fs);
         return NULL;
     }
@@ -473,10 +421,8 @@ f32 *makeFilesystem(char *fatSystem) {
 }
 
 void destroyFilesystem(f32 *fs) {
-    terminal_writestring("Destroying filesystem.\n");
+    printf("Destroying filesystem.\n");
     flushFAT(fs);
-//    fflush(fs->f);
-//    fclose(fs->f);
     kfree(fs->FAT);
     kfree(fs);
 }
@@ -568,8 +514,6 @@ void next_dir_entry(f32 *fs, uint8_t *root_cluster, uint8_t *entry, uint8_t **ne
             // and the previous entry was invalid!
             // It's possible the filesystem is corrupt or... you know...
             // my software could have bugs.
-            //printf("FOUND BAD DIRECTORY ENTRY! EXITING!\n");
-            //exit(1);
             PANIC("FOUND BAD DIRECTORY ENTRY!");
         }
         // Load the cluster after the previous saved entries.
@@ -582,8 +526,6 @@ void next_dir_entry(f32 *fs, uint8_t *root_cluster, uint8_t *entry, uint8_t **ne
         if(!*nextentry) {
             // Still can't parse the directory entry.
             // Something is very wrong.
-            //printf("FAILED TO READ DIRECTORY ENTRY! THE SOFTWARE IS BUGGY!\n");
-            //exit(1);
             PANIC("FAILED TO READ DIRECTORY ENTRY! THE SOFTWARE IS BUGGY!\n");
         }
     }
@@ -850,11 +792,6 @@ void print_directory(f32 *fs, struct directory *dir) {
     }
 
     char *namebuff = kmalloc(max_name + 1);
-//    for(i = 0; i < max_name; i++) {
-//        namebuff[i] = ' ';
-//    }
-//    namebuff[max_name] = 0;
-
     for(i = 0; i < dir->num_entries; i++) {
 //        printf("[%d] %*s %c %8d bytes ",
 //               i,
@@ -862,9 +799,7 @@ void print_directory(f32 *fs, struct directory *dir) {
 //               dir->entries[i].name,
 //               dir->entries[i].dir_attrs & DIRECTORY?'D':' ',
 //               dir->entries[i].file_size, dir->entries[i].first_cluster);
-        terminal_putchar('[');
-        terminal_write_dec(i);
-        terminal_writestring("] ");
+        printf("[%d] ", i);
 
 
         uint32_t j;
@@ -875,32 +810,23 @@ void print_directory(f32 *fs, struct directory *dir) {
         for(j = 0; j < strlen(dir->entries[i].name); j++) {
             namebuff[j] = dir->entries[i].name[j];
         }
-        terminal_writestring(namebuff);
 
-        terminal_putchar(' ');
-        terminal_putchar(dir->entries[i].dir_attrs & DIRECTORY?'D':' ');
-        terminal_putchar(' ');
-        terminal_write_dec(dir->entries[i].file_size);
-        terminal_putchar(' ');
+        printf("%s %c %d ",
+               namebuff,
+               dir->entries[i].dir_attrs & DIRECTORY?'D':' ',
+               dir->entries[i].file_size);
 
         uint32_t cluster = dir->entries[i].first_cluster;
         uint32_t cluster_count = 1;
-        //printf("\nLooking for cluster chain for: [%s]\n",dir->entries[i].name);
         while(1) {
-//            printf("cluster: %u\n", cluster);
             cluster = fs->FAT[cluster];
             if(cluster >= 0x0FFFFFF8) break;
             if(cluster == 0) {
-                //printf("\nBAD CLUSTER CHAIN! FS IS CORRUPT!\n");
-                //exit(1);
                 PANIC("BAD CLUSTER CHAIN! FS IS CORRUPT!");
             }
             cluster_count++;
         }
-        //printf("clusters: [%u]\n", cluster_count);
-        terminal_writestring("clusters: [");
-        terminal_write_dec(cluster_count);
-        terminal_writestring("]\n");
+        printf("clusters: [%d]\n", cluster_count);
     }
     kfree(namebuff);
 }

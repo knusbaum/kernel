@@ -5,7 +5,7 @@
 
 #include "idt.h"
 #include "common.h"
-#include "terminal.h"
+#include "kernio.h"
 #include <stdint.h>
 
 // A struct describing an interrupt gate.
@@ -147,7 +147,7 @@ void init_idt()
     idt_set_gate(46, (uint32_t)irq14, 0x08, 0x8E);
     idt_set_gate(47, (uint32_t)irq15, 0x08, 0x8E);
 
-    terminal_writestring("Flushing IDT.\n");
+    printf("Flushing IDT.\n");
     load_idt(&idt_ptr);
 }
 
