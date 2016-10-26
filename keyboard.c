@@ -179,7 +179,11 @@ void keyboard_handler(registers_t regs) {
 void initialize_keyboard() {
     printf("Initializing keyboard.\n");
 
+    outb(0x64, 0xFF);
     uint8_t status = inb(0x64);
+    printf("Got status (%x) after reset.\n", status);
+    
+    status = inb(0x64);
     if(status & (1 << 0)) {
         printf("Output buffer full.\n");
     }
@@ -229,12 +233,13 @@ void initialize_keyboard() {
         printf("PS/2 controller test passed.\n");
     }
     else if(result == 0xFC) {
-        printf("PS/2 controller test failed!\n");
-        return;
+        printf("PS/2 controller test failed.\n");
+//        return;
     }
     else {
-        printf("PS/2 controller responded to test with unknown code.\n");
-        return;
+        printf("PS/2 controller responded to test with unknown code %x\n", result);
+        printf("Trying to continue.\n");
+//        return;
     }
 
     // Check the PS/2 controller configuration byte.

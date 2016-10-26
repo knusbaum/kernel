@@ -31,7 +31,7 @@ extern char _binary_f32_disk_start;
 
 void kernel_main(struct multiboot_info *mi)
 {
-    terminal_initialize(make_color(COLOR_DARK_GREY, COLOR_WHITE));
+    terminal_initialize(make_color(COLOR_DARK_GREY, COLOR_LIGHT_GREY));
     terminal_set_status_color(make_color(COLOR_WHITE, COLOR_BLACK));
     printf("Booting kernel.\nHave: %d bytes of memory above 1MiB.\n", mi->mem_upper * 1024);
 
@@ -49,28 +49,30 @@ void kernel_main(struct multiboot_info *mi)
 
     initialize_keyboard();
 
-    initialize_paging(total_frames);
-
-    malloc_stats();
-    printf("Done setting up paging.\nKernel is ready to go!!!\n\n");
-    terminal_settextcolor(make_color(COLOR_BLUE, COLOR_WHITE));
-    // Kernel ready to go!
-
-    printf("Creating fat32 filesystem.\n");
-    f32 *fs = makeFilesystem("");
-    if(fs == NULL) {
-        printf("Failed to create fat32 filesystem. Disk may be corrupt.\n");
-        return;
-    }
-
-    fat32_console(fs);
-
-    printf("FAT32 shell exited. It is safe to power off.\nSystem is in free-typing mode.\n");
-
-    while(1) {
-        char c = get_ascii_char();
-        printf("%c", c);
-    };
-    printf("Halting.\n");
+//    initialize_paging(total_frames);
+//
+//    malloc_stats();
+//    printf("Done setting up paging.\nKernel is ready to go!!!\n\n");
+//    terminal_settextcolor(make_color(COLOR_BLUE, COLOR_LIGHT_GREY));
+//    // Kernel ready to go!
+//
+////    printf("Creating fat32 filesystem.\n");
+////    f32 *fs = makeFilesystem("");
+////    if(fs == NULL) {
+////        printf("Failed to create fat32 filesystem. Disk may be corrupt.\n");
+////        return;
+////    }
+////    printf("Starting fat32 console.\n");
+////    
+////    fat32_console(fs);
+////
+////    printf("FAT32 shell exited. It is safe to power off.\nSystem is in free-typing mode.\n");
+////
+//    while(1) {
+//        printf("Getting char.\n");
+//        char c = get_ascii_char();
+//        printf("%c", c);
+//    };
+//    printf("Halting.\n");
 
 }

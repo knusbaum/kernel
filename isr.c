@@ -32,6 +32,10 @@ void isr_handler(registers_t regs)
         printf("Handling!\n");
         interrupt_handlers[regs.int_no](regs);
     }
+//    else {
+//        printf("Got ISR.\n");
+//        PANIC("Unhandled ISR.\n");
+//    }
 }
 
 
@@ -50,4 +54,11 @@ void irq_handler(registers_t regs)
     {
         interrupt_handlers[regs.int_no](regs);
     }
+//    else {
+//        if(regs.int_no == 33) return;
+//        printf("Got IRQ.\n");
+//        char buff[1024];
+//        sprintf(buff, "Unhandled IRQ %d\n", regs.int_no);
+//        PANIC(buff);
+//    }
 }

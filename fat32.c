@@ -386,10 +386,13 @@ static void write_long_filename_entries(uint8_t *start, uint32_t num_entries, ch
 }
 
 f32 *makeFilesystem(char *fatSystem) {
+    printf("KMallocing.\n");
     f32 *fs = kmalloc(sizeof (struct f32));
+    printf("Done!\n");
     if(!identify()) {
         return NULL;
     }
+    printf("Identified!\n");
     read_bpb(fs, &fs->bpb);
 
     trim_spaces(fs->bpb.system_id, 8);

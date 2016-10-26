@@ -2,6 +2,7 @@
 #include "port.h"
 #include "kheap.h"
 #include "common.h"
+#include "kernio.h"
 
 #define ATA_PRIMARY_DATA         0x1F0
 #define ATA_PRIMARY_ERR          0x1F1
@@ -42,21 +43,43 @@
  */
 
 uint8_t identify() {
+    inb(ATA_PRIMARY_COMM_REGSTAT);
     outb(ATA_PRIMARY_DRIVE_HEAD, 0xA0);
+    inb(ATA_PRIMARY_COMM_REGSTAT);
     outb(ATA_PRIMARY_SECCOUNT, 0);
+    inb(ATA_PRIMARY_COMM_REGSTAT);
     outb(ATA_PRIMARY_LBA_LO, 0);
+    inb(ATA_PRIMARY_COMM_REGSTAT);
     outb(ATA_PRIMARY_LBA_MID, 0);
+    inb(ATA_PRIMARY_COMM_REGSTAT);
     outb(ATA_PRIMARY_LBA_HI, 0);
+    inb(ATA_PRIMARY_COMM_REGSTAT);
     outb(ATA_PRIMARY_COMM_REGSTAT, 0xEC);
+    outb(ATA_PRIMARY_COMM_REGSTAT, 0xE7);
 
     // Read the status port. If it's zero, the drive does not exist.
     uint8_t status = inb(ATA_PRIMARY_COMM_REGSTAT);
+
+    printf("Waiting for status.\n");
+    while(status & STAT_BSY) {
+        uint32_t i = 0;
+        while(1) {
+            printf("Printing stuff %d\n", i);
+            i++;
+        }
+        for(i = 0; i < 0x0FFFFFFF; i++) {}
+        printf("Checking regstat.\n");
+        status = inb(ATA_PRIMARY_COMM_REGSTAT);
+    }
+    
     if(status == 0) return 0;
 
     printf("Status indicates presence of a drive. Polling while STAT_BSY.\n");
     while(status & STAT_BSY) {
-        status = inb(ATA_PRIMARY_COMM_REGSTAT);
+      printf("inb(ATA_PRIMARY_COMM_REGSTAT);\n");
+      status = inb(ATA_PRIMARY_COMM_REGSTAT);
     }
+    printf("Done.\n");
 
     uint8_t mid = inb(ATA_PRIMARY_LBA_MID);
     uint8_t hi = inb(ATA_PRIMARY_LBA_HI);
