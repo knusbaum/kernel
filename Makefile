@@ -21,7 +21,9 @@ OBJECTS=terminal.o \
 	ata_pio_drv.o \
 	fat32.o \
 	fat32_console.o \
-	kernio.o
+	kernio.o \
+	realmode.o
+
 
 CFLAGS = -ggdb -m32 -O0 -Wall -Wextra -std=gnu99 -ffreestanding
 AFLAGS = --32 -ggdb
@@ -40,6 +42,9 @@ kernel.o : kernel.c terminal.h gdt.h idt.h pit.h pic.h kheap.h keyboard.h
 
 boot.o : boot.s
 	$(AS) $(AFLAGS) boot.s -o boot.o
+
+realmode.o : realmode.s
+	nasm -f elf32 realmode.s -o realmode.o
 
 interrupt.o : interrupt.s
 	$(AS) $(AFLAGS) interrupt.s -o interrupt.o
