@@ -26,7 +26,7 @@ void identity_map(uint32_t address, uint32_t length) {
     }
 }
 
-void initialize_paging(uint32_t total_frames, uint32_t vesa_addr, uint32_t vesa_len) {
+void initialize_paging(uint32_t total_frames, uint32_t ident_addr, uint32_t ident_len) {
     init_frame_allocator(total_frames);
 
     // Make a page directory for the kernel.
@@ -79,8 +79,8 @@ void initialize_paging(uint32_t total_frames, uint32_t vesa_addr, uint32_t vesa_
     // Before we enable paging, we must register our page fault handler.
     register_interrupt_handler(14, page_fault);
 
-    if(vesa_addr) {
-        identity_map(vesa_addr, vesa_len);
+    if(ident_addr) {
+        identity_map(ident_addr, ident_len);
     }
 
     // Now, enable paging!

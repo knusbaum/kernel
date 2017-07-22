@@ -37,9 +37,13 @@ struct page_directory
 /**
  * Sets up the environment, page directories etc and
  * enables paging.
+ * ident_addr (if specified) causes the initializer
+ * to identity-map all the pages containing
+ * ident_addr through ident_addr + ident_len.
+ * This is currently used to map the VESA LFB in.
  */
-//void initialize_paging(uint32_t total_frames);
-void initialize_paging(uint32_t total_frames, uint32_t vesa_addr, uint32_t vesa_len);
+void initialize_paging(uint32_t total_frames, uint32_t ident_addr, uint32_t ident_len);
+
 /**
  * Causes the specified page directory to be loaded into the
  * CR3 register.
