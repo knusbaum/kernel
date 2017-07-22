@@ -70,7 +70,6 @@ void kernel_main(struct multiboot_info *mi)
     printf("FAT32 shell exited. It is safe to power off.\nSystem is in free-typing mode.\n");
 
     while(1) {
-        printf("Getting char.\n");
         char c = get_ascii_char();
         printf("%c", c);
     };
