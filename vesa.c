@@ -51,6 +51,35 @@ struct VbeInfoBlock vib;
 struct ModeInfoBlock mib; // = 0x80000 + sizeof (struct VbeInfoBlock) + 512;
 uint32_t *framebuffer = 0;
 
+#define CHAR_ROW 16
+#define CHAR_COLUMN 8
+#define CHARLEN (CHAR_ROW * CHAR_COLUMN) // 8 columns * 16 rows
+#define CHARCOUNT 94 // 94 printable characters
+
+#define CHAROFF(c) ((c - 32) * CHARLEN)
+
+uint32_t chars[CHARCOUNT * CHARLEN];
+
+void populate_chars() {
+    for(unsigned char c = ' '; c < '~'; c++) {
+        unsigned short offset = (c - 31) * 16 ;
+
+        for(int row = 0; row < CHAR_ROW; row++) {
+            uint8_t mask = 1 << 7;
+            uint32_t *abs_row = chars + CHAROFF(c) + (row * 8);
+            for(int i = 0; i < 8; i++) {
+                if(font.Bitmap[offset + row] & mask) {
+                    abs_row[i] = 0xFFFFFFFF;
+                }
+                else {
+                    abs_row[i] = 0;
+                }
+                mask = (mask >> 1);
+            }
+        }
+    }
+}
+
 void populate_vib() {
     struct VbeInfoBlock *loc_vib = 0x80000; // Safe low-memory
 
@@ -63,6 +92,8 @@ void populate_vib() {
 }
 
 void set_vmode() {
+    populate_chars();
+
     populate_vib();
     regs16_t regs;
 
@@ -115,26 +146,19 @@ void draw_pixel_at(int x, int y, uint32_t color) {
     row[x] = color;
 }
 
-void draw_character_at(int x, int y, int c, uint32_t fg, uint32_t bg) {
-    unsigned short offset = (c - 31) * 16 ;
-
-    for(int row = 0; row < 16; row++) {
-        uint8_t mask = 1 << 7;
-        uint32_t *abs_row = ((unsigned char *)framebuffer) + ((y + row) * mib.pitch);
-        for(int i = 0; i < 8; i++) {
-            if(font.Bitmap[offset + row] & mask) {
-                abs_row[x + i] = fg;
-            }
-            else {
-                abs_row[x + i] = bg;
-            }
-            mask = (mask >> 1);
-        }
+static inline void draw_character_at(int x, int y, int c, uint32_t fg, uint32_t bg) {
+    uint32_t step = mib.pitch/4;
+    uint32_t *chardat = chars + CHAROFF(c);
+    uint32_t *abs_row = ((unsigned char *)framebuffer) + (y * mib.pitch);
+    abs_row += x;
+    for(int row = 0; row < CHAR_ROW *8; row+=8) {
+        fastcp(abs_row, chardat + row, 32);
+        abs_row += step;
     }
 }
 
 void shift_up() {
-    memcpy(framebuffer, ((char *)framebuffer) + ((1280 * 16) * 4), (1280 * 704) * 4);
+    fastcp(framebuffer, ((char *)framebuffer) + ((1280 * 16) * 4), (1280 * 704) * 4);
     memset(((char *)framebuffer) + (1280 * 704 * 4), 0, 1280 * 16 * 4);
 }
 

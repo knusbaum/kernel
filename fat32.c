@@ -246,7 +246,7 @@ static void write_8_3_filename(char *fname, uint8_t *buffer) {
     if(dot_index >= 0) {
         for(i = 0; i < 3; i++) {
             uint32_t c_index = dot_index + 1 + i;
-            uint8_t c = c_index >= namelen ? ' ' : toupper(fname[c_index]);
+            uint8_t c = c_index >= namelen ? ' ' : k_toupper(fname[c_index]);
             buffer[8 + i] = c;
         }
     }
@@ -264,7 +264,7 @@ static void write_8_3_filename(char *fname, uint8_t *buffer) {
     if(firstpart_len > 8) {
         // Write the weird tilde thing.
         for(i = 0; i < 6; i++) {
-            buffer[i] = toupper(fname[i]);
+            buffer[i] = k_toupper(fname[i]);
         }
         buffer[6] = '~';
         buffer[7] = '1'; // probably need to enumerate like files and increment.
@@ -273,7 +273,7 @@ static void write_8_3_filename(char *fname, uint8_t *buffer) {
         // Just write the file name.
         uint32_t j;
         for(j = 0; j < firstpart_len; j++) {
-            buffer[j] = toupper(fname[j]);
+            buffer[j] = k_toupper(fname[j]);
         }
     }
 }

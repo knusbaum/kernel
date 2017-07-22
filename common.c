@@ -25,13 +25,13 @@ void *memcpy(void *dest, const void *src, size_t n) {
     return dest;
 }
 
-int toupper(int c) {
+int k_toupper(int c) {
     if(c >= 97 && c <= 122) {
         return c - 32;
     }
     return c;
 }
-int tolower(int c) {
+int k_tolower(int c) {
     if(c >=65 && c <= 90) {
         return c + 32;
     }

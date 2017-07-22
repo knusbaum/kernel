@@ -24,10 +24,11 @@ OBJECTS=terminal.o \
 	kernio.o \
 	realmode.o \
 	vesa.o \
-	font.o
+	font.o \
+	common_asm.o \
 
 
-CFLAGS = -ggdb -m32 -O0 -Wall -Wextra -std=gnu99 -ffreestanding
+CFLAGS = -ggdb -m32 -O2 -Wall -Wextra -std=gnu99 -ffreestanding
 AFLAGS = --32 -ggdb
 LDFLAGS = $(CFLAGS) -nostdlib -lgcc -Wl,--build-id=none
 
@@ -38,6 +39,12 @@ clean:
 
 nuke: clean
 	-@rm $(KERNEL_IMG) *.d
+
+run: all
+	qemu-system-i386 --kernel $(KERNEL_IMG) -drive file=f32_active.disk,format=raw -m size=4096
+
+run-kvm: all
+	sudo qemu-system-i386 --kernel $(KERNEL_IMG) -drive file=f32_active.disk,format=raw -m size=4096 --enable-kvm
 
 kernel.o : kernel.c terminal.h gdt.h idt.h pit.h pic.h kheap.h keyboard.h
 	$(CC) $(CFLAGS) -c kernel.c -o kernel.o
@@ -53,6 +60,9 @@ interrupt.o : interrupt.s
 
 port.o : port.s
 	$(AS) $(AFLAGS) port.s -o port.o
+
+common_asm.o : common.s
+	$(AS) $(AFLAGS) common.s -o common_asm.o
 
 terminal.o : terminal.c terminal.h
 	$(CC) $(CFLAGS) -c terminal.c -o terminal.o

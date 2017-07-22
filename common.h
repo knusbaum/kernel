@@ -6,9 +6,10 @@
 
 void *memset(void *p, int c, size_t count);
 void *memcpy(void *dest, const void *src, size_t n);
+extern void fastcp(char *dest, char *src, uint32_t count);
 
-int toupper(int c);
-int tolower(int c);
+int k_toupper(int c);
+int k_tolower(int c);
 
 char * itos(uint32_t myint, char buffer[], int bufflen);
 
