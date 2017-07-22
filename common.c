@@ -38,6 +38,24 @@ int tolower(int c) {
     return c;
 }
 
+char * itos(uint32_t myint, char buffer[], int bufflen)
+{
+    int i = bufflen - 2;
+    buffer[bufflen-1] = 0;
+
+    if(myint == 0) {
+        buffer[i--] = '0';
+    }
+
+    while(myint > 0 && i >= 0)
+    {
+        buffer[i--] = (myint % 10) + '0';
+        myint/=10;
+    }
+
+    return &buffer[i+1];
+}
+
 size_t strlen(const char* str) {
     size_t ret = 0;
     while ( str[ret] != 0 )
@@ -112,9 +130,9 @@ uint8_t hex_char(uint8_t byte)
 }
 
 void PANIC(char *err) {
-    terminal_set_cursor(0, 1);
-    terminal_setcolor(make_color(COLOR_DARK_GREY, COLOR_BLACK));
-    terminal_settextcolor(make_color(COLOR_RED, COLOR_BLACK));
-    printf("PANIC: %s", err);
+    //terminal_set_cursor(0, 1);
+    //terminal_setcolor(make_color(COLOR_DARK_GREY, COLOR_BLACK));
+    //terminal_settextcolor(make_color(COLOR_RED, COLOR_BLACK));
+    //printf("PANIC: %s", err);
     halt();
 }

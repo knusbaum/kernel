@@ -10,6 +10,8 @@ void *memcpy(void *dest, const void *src, size_t n);
 int toupper(int c);
 int tolower(int c);
 
+char * itos(uint32_t myint, char buffer[], int bufflen);
+
 size_t strlen(const char* str);
 int strcmp(const char *s1, const char *s2);
 

@@ -4,6 +4,7 @@
 #include <stdarg.h>
 
 int printf(char *fmt, ...) {
+    //return;
     va_list argp;
     va_start(argp, fmt);
 

@@ -3,6 +3,7 @@
 #include "kernio.h"
 #include "isr.h"
 #include "port.h"
+#include "terminal.h"
 
 /*
  * Scan code   Key                         Scan code   Key                     Scan code   Key                     Scan code   Key

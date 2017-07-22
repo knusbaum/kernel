@@ -41,7 +41,7 @@ static void timer_callback(registers_t regs)
                used, available,
                heap_free,
                allocations);
-        terminal_set_status(buffer);
+        //terminal_set_status(buffer);
 //        // This whole thing below is sort of ugly and hacky
 //        // but I guess it works for now.
 //
@@ -142,7 +142,7 @@ void init_timer(uint32_t frequency)
     printf("Initializing PIT timer\n");
     register_interrupt_handler(IRQ0, &timer_callback);
 
-    normal_color = make_color(COLOR_WHITE, COLOR_BLACK);
+    //normal_color = make_color(COLOR_WHITE, COLOR_BLACK);
 
     uint32_t divisor;
     if(frequency)

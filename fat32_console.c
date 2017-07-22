@@ -4,6 +4,7 @@
 #include "keyboard.h"
 #include "kheap.h"
 #include "kernio.h"
+#include "terminal.h"
 
 int handle_commands(f32 *fs, struct directory *dir, char *buffer);
 

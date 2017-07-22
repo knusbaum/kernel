@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "terminal.h"
 #include "port.h"
+#include "common.h"
 
 #define VGA_COMMAND_PORT 0x3D4
 #define VGA_DATA_PORT    0x3D5
@@ -14,6 +15,8 @@ static uint8_t terminal_color;
 static uint8_t text_color;
 static uint16_t* terminal_buffer;
 static uint8_t status_color;
+
+void (*terminal_putchar)(char c);
 
 static uint16_t make_vgaentry(char c, uint8_t color);
 static void terminal_putentryat(char c, uint8_t color, size_t x, size_t y);
@@ -32,24 +35,6 @@ static uint16_t make_vgaentry(char c, uint8_t color)
     return c16 | color16 << 8;
 }
 
-char * itos(uint32_t myint, char buffer[], int bufflen)
-{
-    int i = bufflen - 2;
-    buffer[bufflen-1] = 0;
-
-    if(myint == 0) {
-        buffer[i--] = '0';
-    }
-
-    while(myint > 0 && i >= 0)
-    {
-        buffer[i--] = (myint % 10) + '0';
-        myint/=10;
-    }
-
-    return &buffer[i+1];
-}
-
 static void move_cursor(uint8_t xpos, uint8_t ypos)
 {
     uint16_t location = ypos * VGA_WIDTH + xpos;
@@ -60,6 +45,8 @@ static void move_cursor(uint8_t xpos, uint8_t ypos)
     outb(VGA_DATA_PORT, location);
 }
 
+void basic_terminal_putchar(char c);
+
 void terminal_initialize(uint8_t color)
 {
     terminal_row = 1;
@@ -69,6 +56,7 @@ void terminal_initialize(uint8_t color)
     status_color = color;
     terminal_buffer = (uint16_t*) 0xB8000;
     move_cursor(0,0);
+    terminal_putchar = basic_terminal_putchar;
     for ( size_t y = 0; y < VGA_HEIGHT; y++ )
     {
         for ( size_t x = 0; x < VGA_WIDTH; x++ )
@@ -145,7 +133,7 @@ static void terminal_newline()
     move_cursor(terminal_column, terminal_row);
 }
 
-void terminal_putchar(char c)
+void basic_terminal_putchar(char c)
 {
     switch (c)
     {

@@ -14,7 +14,19 @@ extern uint32_t placement_address;
 
 uint8_t initialized = 0;
 
-void initialize_paging(uint32_t total_frames) {
+void identity_map(uint32_t address, uint32_t length) {
+    uint32_t curr = address & 0xFFFFF000;
+    while(curr < address + length) {
+        struct page *p = get_page(curr, 1, kernel_directory);
+        p->present = 1;
+        p->rw = 1;
+        p->user = 0;
+        p->frame = curr >> 12;
+        curr += 0x1000;
+    }
+}
+
+void initialize_paging(uint32_t total_frames, uint32_t vesa_addr, uint32_t vesa_len) {
     init_frame_allocator(total_frames);
 
     // Make a page directory for the kernel.
@@ -35,7 +47,6 @@ void initialize_paging(uint32_t total_frames) {
         }
     }
     printf("Done\n");
-
     // We need to identity map (phys addr = virt addr) from
     // 0x0 to the end of used memory, so we can access this
     // transparently, as if paging wasn't enabled.
@@ -47,6 +58,7 @@ void initialize_paging(uint32_t total_frames) {
     // This is hacky. Probably want to do this some other way.
     // Reaching into kmalloc_early and grabbing placement_address
     // is not ideal.
+    i = 0;
     while(i < placement_address)
     {
         // Kernel code is readable but not writeable from userspace.
@@ -57,6 +69,8 @@ void initialize_paging(uint32_t total_frames) {
     // start leaking into the address space.
     uint32_t heap_start = disable_early_kmalloc();
 
+    printf("KHEAP_START: %x\n", heap_start);
+
     // bootstrap the kheap with INITIAL_HEAP_PAGE_COUNT pages.
     for(i = 0; i < INITIAL_HEAP_PAGE_COUNT; i++) {
         alloc_frame(get_page(heap_start + (i * 0x1000), 1, kernel_directory), 0, 0);
@@ -65,12 +79,17 @@ void initialize_paging(uint32_t total_frames) {
     // Before we enable paging, we must register our page fault handler.
     register_interrupt_handler(14, page_fault);
 
+    identity_map(vesa_addr, vesa_len);
+
     // Now, enable paging!
     switch_page_directory(kernel_directory);
     initialized = 1;
 
+
+    printf("Initializing kheap!\n");
     // Set up the kernel heap!
     initialize_kheap(heap_start);
+    printf("DONE!\n");
 }
 
 void switch_page_directory(struct page_directory *dir)

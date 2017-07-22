@@ -29,8 +29,9 @@ void isr_handler(registers_t regs)
 
     if(interrupt_handlers[regs.int_no])
     {
-        printf("Handling!\n");
+        //printf("Handling %d!\n", regs.int_no);
         interrupt_handlers[regs.int_no](regs);
+        //printf("Returning!\n");
     }
 //    else {
 //        printf("Got ISR.\n");

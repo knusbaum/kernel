@@ -23,7 +23,8 @@ OBJECTS=terminal.o \
 	fat32_console.o \
 	kernio.o \
 	realmode.o \
-	vesa.o
+	vesa.o \
+	font.o
 
 
 CFLAGS = -ggdb -m32 -O0 -Wall -Wextra -std=gnu99 -ffreestanding
@@ -118,3 +119,6 @@ kernio.o : kernio.c kernio.h terminal.h
 
 vesa.o : vesa.c vesa.h
 	$(CC) $(CFLAGS) -c vesa.c -o vesa.o
+
+font.o : font.c font.h
+	$(CC) $(CFLAGS) -c font.c -o font.o

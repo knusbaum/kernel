@@ -1,8 +1,6 @@
 #ifndef KERNIO_H
 #define KERNIO_H
 
-#include "terminal.h"
-
 /**
  * Supports %c %s %d and %x
  */
