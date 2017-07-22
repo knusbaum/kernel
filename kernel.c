@@ -35,6 +35,7 @@ extern char _binary_f32_disk_start;
 
 void kernel_main(struct multiboot_info *mi)
 {
+    terminal_initialize(COLOR_WHITE);
     uint32_t low_pages = 256; // 1024 * 1024 bytes / 4096
     uint32_t high_pages = (mi->mem_upper * 1024) / 4096;
 

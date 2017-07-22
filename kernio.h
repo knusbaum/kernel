@@ -6,5 +6,6 @@
  */
 int printf(char *fmt, ...);
 int sprintf(char *str, char *fmt, ...);
+void set_status(char *str);
 
 #endif

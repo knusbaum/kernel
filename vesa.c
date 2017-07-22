@@ -5,6 +5,7 @@
 
 
 void vesa_putchar(char c);
+void vesa_set_status(char *status);
 
 struct VbeInfoBlock {
    char VbeSignature[4];             // == "VESA"
@@ -48,7 +49,7 @@ struct ModeInfoBlock {
 struct VbeInfoBlock vib;
 // VIB extends beyond size of struct. 512 is somewhat arbitrary.
 struct ModeInfoBlock mib; // = 0x80000 + sizeof (struct VbeInfoBlock) + 512;
-uint32_t *framebuffer;
+uint32_t *framebuffer = 0;
 
 void populate_vib() {
     struct VbeInfoBlock *loc_vib = 0x80000; // Safe low-memory
@@ -98,6 +99,7 @@ void set_vmode() {
     int32(0x10, &regs);
 
     terminal_putchar = vesa_putchar;
+    terminal_set_status = vesa_set_status;
     mib = *loc_mib;
 }
 
@@ -184,4 +186,16 @@ uint32_t get_framebuffer_addr() {
 
 uint32_t get_framebuffer_length() {
     return 1280 * 720 * 4;
+}
+
+void vesa_set_status(char *status) {
+    int currx = 0;
+    while(*status) {
+        draw_character_at(currx, 0, *status++, 0xFFFFFFFF, 0);
+        currx += 8;
+    }
+    while(currx + 8 < mib.Xres) {
+        draw_character_at(currx, 0, ' ', 0xFFFFFFFF, 0);
+        currx += 8;
+    }
 }

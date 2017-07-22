@@ -17,6 +17,7 @@ static uint16_t* terminal_buffer;
 static uint8_t status_color;
 
 void (*terminal_putchar)(char c);
+void (*terminal_set_status)(char *status);
 
 static uint16_t make_vgaentry(char c, uint8_t color);
 static void terminal_putentryat(char c, uint8_t color, size_t x, size_t y);
@@ -46,6 +47,7 @@ static void move_cursor(uint8_t xpos, uint8_t ypos)
 }
 
 void basic_terminal_putchar(char c);
+void basic_terminal_set_status(char *status);
 
 void terminal_initialize(uint8_t color)
 {
@@ -57,6 +59,7 @@ void terminal_initialize(uint8_t color)
     terminal_buffer = (uint16_t*) 0xB8000;
     move_cursor(0,0);
     terminal_putchar = basic_terminal_putchar;
+    terminal_set_status = basic_terminal_set_status;
     for ( size_t y = 0; y < VGA_HEIGHT; y++ )
     {
         for ( size_t x = 0; x < VGA_WIDTH; x++ )
@@ -188,7 +191,7 @@ void terminal_set_status_color(uint8_t color)
     status_color = color;
 }
 
-void terminal_set_status(char *status)
+void basic_terminal_set_status(char *status)
 {
     uint16_t blank = make_vgaentry(' ', status_color);
     //Clear the first line

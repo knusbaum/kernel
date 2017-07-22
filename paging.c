@@ -79,7 +79,9 @@ void initialize_paging(uint32_t total_frames, uint32_t vesa_addr, uint32_t vesa_
     // Before we enable paging, we must register our page fault handler.
     register_interrupt_handler(14, page_fault);
 
-    identity_map(vesa_addr, vesa_len);
+    if(vesa_addr) {
+        identity_map(vesa_addr, vesa_len);
+    }
 
     // Now, enable paging!
     switch_page_directory(kernel_directory);

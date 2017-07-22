@@ -97,3 +97,9 @@ int sprintf(char *str, char *fmt, ...) {
     *str++ = 0;
     return 0;
 }
+
+void set_status(char *str) {
+    if(terminal_set_status) {
+        terminal_set_status(str);
+    }
+}
