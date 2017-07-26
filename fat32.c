@@ -401,6 +401,8 @@ f32 *makeFilesystem(char *fatSystem) {
         return NULL;
     }
 
+    printf("Sectors per cluster: %d\n", fs->bpb.sectors_per_cluster);
+
     fs->partition_begin_sector = 0;
     fs->fat_begin_sector = fs->partition_begin_sector + fs->bpb.reserved_sectors;
     fs->cluster_begin_sector = fs->fat_begin_sector + (fs->bpb.FAT_count * fs->bpb.count_sectors_per_FAT32);

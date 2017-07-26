@@ -2,9 +2,11 @@ CC=cc
 AS=as
 KERNEL_IMG=myos.bin
 
-CFLAGS = -ggdb -m32 -O2 -Wall -Wextra -std=gnu99 -ffreestanding
+CFLAGS = -ggdb -m32 -O0 -Wall -Wextra -std=gnu99 -ffreestanding
 AFLAGS = --32 -ggdb
 LDFLAGS = $(CFLAGS) -nostdlib -lgcc -Wl,--build-id=none
+
+## END CONFIGURABLE ##
 
 ## Gather the necessary assembly files
 ASM_FILES=$(shell ls *.s)
@@ -27,13 +29,29 @@ clean:
 	-@rm -R deps
 
 nuke: clean
-	-@rm $(KERNEL_IMG) *.d
+	-@rm $(KERNEL_IMG)
+	-@rm f32.disk
 
-run: $(KERNEL_IMG)
-	qemu-system-i386 --kernel $(KERNEL_IMG) -drive file=f32_active.disk,format=raw -m size=4096
+run: $(KERNEL_IMG) f32.disk
+	qemu-system-i386 --kernel $(KERNEL_IMG) -drive file=f32.disk,format=raw -m size=4096
 
-run-kvm: $(KERNEL_IMG)
-	sudo qemu-system-i386 --kernel $(KERNEL_IMG) -drive file=f32_active.disk,format=raw -m size=4096 --enable-kvm
+run-debug: $(KERNEL_IMG) f32.disk
+	qemu-system-i386 --kernel $(KERNEL_IMG) -drive file=f32.disk,format=raw -m size=4096 -S -s
+
+run-kvm: $(KERNEL_IMG) f32.disk
+	sudo qemu-system-i386 --kernel $(KERNEL_IMG) -drive file=f32.disk,format=raw -m size=4096 --enable-kvm
+
+f32.disk:
+	-rm f32.disk
+	dd if=/dev/zero of=f32.disk bs=1M count=100
+	mkfs.fat -F32 f32.disk -s 1
+
+populate_disk: f32.disk
+	mkdir -p fat32
+	sudo mount -rw f32.disk fat32
+	sudo cp *.c fat32
+	sudo umount fat32
+	-@rm -Rf fat32
 
 $(KERNEL_IMG) : $(OBJECTS) linker.ld
 	$(CC) $(LDFLAGS) -T linker.ld -o myos.bin $(OBJECTS)
