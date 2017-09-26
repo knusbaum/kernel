@@ -3,7 +3,7 @@ AS=as
 KERNEL_IMG=myos.bin
 
 CFLAGS = -ggdb -m32 -O0 -Wall -Wextra -std=gnu99 -ffreestanding
-AFLAGS = --32 -ggdb
+AFLAGS = -m32 -ggdb
 LDFLAGS = $(CFLAGS) -nostdlib -lgcc -Wl,--build-id=none
 
 ## END CONFIGURABLE ##
@@ -35,8 +35,21 @@ nuke: clean
 run: $(KERNEL_IMG) f32.disk
 	qemu-system-i386 --kernel $(KERNEL_IMG) -drive file=f32.disk,format=raw -m size=4096
 
+
 run-debug: $(KERNEL_IMG) f32.disk
 	qemu-system-i386 --kernel $(KERNEL_IMG) -drive file=f32.disk,format=raw -m size=4096 -S -s
+
+boot.o : boot.nasm
+	nasm -f elf boot.nasm -o boot.o
+
+realmode.o : realmode.s
+	nasm -f elf realmode.s -o realmode.o
+
+common_asm.o : common_asm.nasm
+	nasm -f elf common_asm.nasm -o common_asm.o
+
+gdt_asm.o : gdt_asm.nasm
+	nasm -f elf gdt_asm.nasm -o gdt_asm.o
 
 run-kvm: $(KERNEL_IMG) f32.disk
 	sudo qemu-system-i386 --kernel $(KERNEL_IMG) -drive file=f32.disk,format=raw -m size=4096 --enable-kvm
@@ -61,8 +74,8 @@ realmode.o : realmode.s
 	nasm -f elf32 realmode.s -o realmode.o
 
 ## Generic assembly rule
-%.o: %.s
-	$(AS) $(AFLAGS) $< -o $@
+#%.o: %.s
+#	$(AS) $(AFLAGS) $< -o $@
 
 deps/%.d : %.c
 	@mkdir -p deps
