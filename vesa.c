@@ -6,6 +6,8 @@
 
 void vesa_putchar(char c);
 void vesa_set_status(char *status);
+void vesa_set_cursor(uint8_t x, uint8_t y);
+uint32_t make_vesa_color(uint8_t r, uint8_t g, uint8_t b);
 
 struct VbeInfoBlock {
    char VbeSignature[4];             // == "VESA"
@@ -60,7 +62,7 @@ uint32_t *framebuffer = 0;
 
 uint32_t chars[CHARCOUNT * CHARLEN];
 
-void populate_chars() {
+void populate_chars(uint32_t vesa_color) {
     for(unsigned char c = ' '; c < '~'; c++) {
         unsigned short offset = (c - 31) * 16 ;
 
@@ -69,7 +71,7 @@ void populate_chars() {
             uint32_t *abs_row = chars + CHAROFF(c) + (row * 8);
             for(int i = 0; i < 8; i++) {
                 if(font.Bitmap[offset + row] & mask) {
-                    abs_row[i] = 0xFFFFFFFF;
+                    abs_row[i] = vesa_color; //0xFFFFFFFF;
                 }
                 else {
                     abs_row[i] = 0;
@@ -92,8 +94,6 @@ void populate_vib() {
 }
 
 void set_vmode() {
-    populate_chars();
-
     populate_vib();
     regs16_t regs;
 
@@ -131,14 +131,20 @@ void set_vmode() {
 
     terminal_putchar = vesa_putchar;
     terminal_set_status = vesa_set_status;
+    terminal_set_cursor = vesa_set_cursor;
     mib = *loc_mib;
+    populate_chars(make_vesa_color(255, 255, 255));
 }
 
 uint32_t make_vesa_color(uint8_t r, uint8_t g, uint8_t b) {
-    uint32_t red = r << mib.red_position;
-    uint32_t green = g << mib.green_position;
-    uint32_t blue = b << mib.blue_position;
+    uint32_t red = ((uint32_t)r) << mib.red_position;
+    uint32_t green = ((uint32_t)g) << mib.green_position;
+    uint32_t blue = ((uint32_t)b) << mib.blue_position;
     return red | green | blue;
+}
+
+void set_vesa_color(uint8_t r, uint8_t g, uint8_t b) {
+    populate_chars(make_vesa_color(r, g, b));
 }
 
 void draw_pixel_at(int x, int y, uint32_t color) {
@@ -158,7 +164,7 @@ static inline void draw_character_at(int x, int y, int c, uint32_t fg, uint32_t 
 }
 
 void shift_up() {
-    fastcp(framebuffer, ((char *)framebuffer) + ((1280 * 16) * 4), (1280 * 704) * 4);
+    fastcp(((char *)framebuffer) + ((1280 * 16) * 4), ((char *)framebuffer) + ((1280 * 16) * 8), (1280 * 704) * 4 - ((1280 * 16) * 4));
     memset(((char *)framebuffer) + (1280 * 704 * 4), 0, 1280 * 16 * 4);
 }
 
@@ -173,6 +179,11 @@ void vesa_newline() {
     else {
         curry += 16;
     }
+}
+
+void vesa_set_cursor(uint8_t x, uint8_t y) {
+    currx = x * 8;
+    curry = y * 16;
 }
 
 void vesa_putchar(char c) {

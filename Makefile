@@ -1,10 +1,10 @@
-CC=cc
+CC=gcc
 AS=as
 KERNEL_IMG=myos.bin
 
 CFLAGS = -ggdb -m32 -O0 -Wall -Wextra -std=gnu99 -ffreestanding
 AFLAGS = -m32 -ggdb
-LDFLAGS = $(CFLAGS) -nostdlib -lgcc -Wl,--build-id=none
+LDFLAGS = $(CFLAGS) -nostdlib -lgcc -Wl,--build-id=none -lssp
 
 ## END CONFIGURABLE ##
 
@@ -37,10 +37,11 @@ run: $(KERNEL_IMG) f32.disk
 
 
 run-debug: $(KERNEL_IMG) f32.disk
+	@echo "gdb target localhost:1234"
 	qemu-system-i386 --kernel $(KERNEL_IMG) -drive file=f32.disk,format=raw -m size=4096 -S -s
 
 boot.o : boot.nasm
-	nasm -f elf boot.nasm -o boot.o
+	nasm -f elf32 boot.nasm -o boot.o
 
 realmode.o : realmode.s
 	nasm -f elf realmode.s -o realmode.o
@@ -50,6 +51,15 @@ common_asm.o : common_asm.nasm
 
 gdt_asm.o : gdt_asm.nasm
 	nasm -f elf gdt_asm.nasm -o gdt_asm.o
+
+idt_asm.o : idt_asm.nasm
+	nasm -f elf idt_asm.nasm -o idt_asm.o
+
+#idt_asm.o : idt_asm.s
+#	$(AS) --32 -ggdb idt_asm.s -o idt_asm.o
+
+port.o : port.s
+	$(AS) --32 -ggdb port.s -o port.o
 
 run-kvm: $(KERNEL_IMG) f32.disk
 	sudo qemu-system-i386 --kernel $(KERNEL_IMG) -drive file=f32.disk,format=raw -m size=4096 --enable-kvm
@@ -62,7 +72,9 @@ f32.disk:
 populate_disk: f32.disk
 	mkdir -p fat32
 	sudo mount -rw f32.disk fat32
-	sudo cp *.c fat32
+	sudo cp *.c *.h fat32
+	sudo cp -R deps fat32/
+	sleep 1
 	sudo umount fat32
 	-@rm -Rf fat32
 
@@ -70,8 +82,8 @@ $(KERNEL_IMG) : $(OBJECTS) linker.ld
 	$(CC) $(LDFLAGS) -T linker.ld -o myos.bin $(OBJECTS)
 
 ## Realmode uses nasm
-realmode.o : realmode.s
-	nasm -f elf32 realmode.s -o realmode.o
+#realmode.o : realmode.s
+#	nasm -f elf32 realmode.s -o realmode.o
 
 ## Generic assembly rule
 #%.o: %.s

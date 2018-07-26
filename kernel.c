@@ -69,10 +69,25 @@ void kernel_main(struct multiboot_info *mi)
 
     printf("FAT32 shell exited. It is safe to power off.\nSystem is in free-typing mode.\n");
 
-    while(1) {
-        char c = get_ascii_char();
-        printf("%c", c);
-    };
+    void *initial = NULL;
+
+    for(int i = 0; i < 0x3FFFFFF; i++) {
+        void **temp = kmalloc(0xF);
+        temp[0] = initial;
+        initial=temp;
+    }
+
+//    printf("Memory list head: %x\n", initial);
+//    while(initial) {
+//        void *next = ((void **)initial)[0];
+//        kfree(initial);
+//        initial = next;
+//    }
+//    
+//    while(1) {
+//        char c = get_ascii_char();
+//        printf("%c", c);
+//    };
     printf("Halting.\n");
 
 }

@@ -18,6 +18,7 @@ static uint8_t status_color;
 
 void (*terminal_putchar)(char c);
 void (*terminal_set_status)(char *status);
+void (*terminal_set_cursor)(uint8_t x, uint8_t y);
 
 static uint16_t make_vgaentry(char c, uint8_t color);
 static void terminal_putentryat(char c, uint8_t color, size_t x, size_t y);
@@ -48,6 +49,7 @@ static void move_cursor(uint8_t xpos, uint8_t ypos)
 
 void basic_terminal_putchar(char c);
 void basic_terminal_set_status(char *status);
+void basic_terminal_set_cursor(uint8_t x, uint8_t y);
 
 void terminal_initialize(uint8_t color)
 {
@@ -215,7 +217,7 @@ void basic_terminal_set_status(char *status)
     terminal_column = backup_column;
 }
 
-void terminal_set_cursor(uint8_t x, uint8_t y)
+void basic_terminal_set_cursor(uint8_t x, uint8_t y)
 {
     if(x >= VGA_WIDTH) {
         x = terminal_column;

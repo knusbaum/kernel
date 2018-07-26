@@ -85,6 +85,60 @@ const uint8_t upper_ascii_codes[256] = {
     0x00, 0x00, 0x00, 0x00      /* 0x58 */
 };
 
+
+const uint8_t lower_ascii_codes_dvorak[256] = {
+    0x00,  ESC,  '1',  '2',     /* 0x00 */
+     '3',  '4',  '5',  '6',     /* 0x04 */
+     '7',  '8',  '9',  '0',     /* 0x08 */
+     '[',  ']',   BS, '\t',     /* 0x0C */
+    '\'',  ',',  '.',  'p',     /* 0x10 */
+     'y',  'f',  'g',  'c',     /* 0x14 */
+     'r',  'l',  '/',  '=',     /* 0x18 */
+    '\n', 0x00,  'a',  'o',     /* 0x1C */
+     'e',  'u',  'i',  'd',     /* 0x20 */
+     'h',  't',  'n',  's',     /* 0x24 */
+     '-',  '`', 0x00, '\\',     /* 0x28 */
+     ';',  'q',  'j',  'k',     /* 0x2C */
+     'x',  'b',  'm',  'w',     /* 0x30 */
+     'v',  'z', 0x00,  '*',     /* 0x34 */
+    0x00,  ' ', 0x00, 0x00,     /* 0x38 */
+    0x00, 0x00, 0x00, 0x00,     /* 0x3C */
+    0x00, 0x00, 0x00, 0x00,     /* 0x40 */
+    0x00, 0x00, 0x00,  '7',     /* 0x44 */
+     '8',  '9',  '[',  '4',     /* 0x48 */
+     '5',  '6',  '}',  '1',     /* 0x4C */
+     '2',  '3',  '0',  'v',     /* 0x50 */
+    0x00, 0x00, 0x00, 0x00,     /* 0x54 */
+    0x00, 0x00, 0x00, 0x00      /* 0x58 */
+};
+
+// Scancode -> ASCII
+const uint8_t upper_ascii_codes_dvorak[256] = {
+    0x00,  ESC,  '!',  '@',     /* 0x00 */
+     '#',  '$',  '%',  '^',     /* 0x04 */
+     '&',  '*',  '(',  ')',     /* 0x08 */
+     '{',  '}',   BS, '\t',     /* 0x0C */
+     '"',  '<',  '>',  'P',     /* 0x10 */
+     'Y',  'F',  'G',  'C',     /* 0x14 */
+     'R',  'L',  '?',  '+',     /* 0x18 */
+    '\n', 0x00,  'A',  'O',     /* 0x1C */
+     'E',  'U',  'I',  'D',     /* 0x20 */
+     'H',  'T',  'N',  'S',     /* 0x24 */
+     '_',  '~', 0x00,  '|',     /* 0x28 */
+     ':',  'Q',  'J',  'K',     /* 0x2C */
+     'X',  'B',  'M',  'W',     /* 0x30 */
+     'V',  'Z', 0x00,  '*',     /* 0x34 */
+    0x00,  ' ', 0x00, 0x00,     /* 0x38 */
+    0x00, 0x00, 0x00, 0x00,     /* 0x3C */
+    0x00, 0x00, 0x00, 0x00,     /* 0x40 */
+    0x00, 0x00, 0x00,  '7',     /* 0x44 */
+     '8',  '9',  '[',  '4',     /* 0x48 */
+    '5',  '6',  '}',  '1',     /* 0x4C */
+     '2',  '3',  '0',  'v',     /* 0x50 */
+    0x00, 0x00, 0x00, 0x00,     /* 0x54 */
+    0x00, 0x00, 0x00, 0x00      /* 0x58 */
+};
+
 // shift flags. left shift is bit 0, right shift is bit 1.
 uint8_t shift;
 // control flags just like shift flags.
@@ -151,7 +205,7 @@ static void poll_keyboard_input() {
 
     const uint8_t *codes;
     if(ctrl) {
-        if(lower_ascii_codes[byte] == 'd') {
+        if(lower_ascii_codes_dvorak[byte] == 'd') {
             // Ctrl+d
             kb_buff[kb_buff_hd] = EOT;
             kb_buff_hd = next_hd;
@@ -159,10 +213,10 @@ static void poll_keyboard_input() {
         }
     }
     else if(shift) {
-        codes = upper_ascii_codes;
+        codes = upper_ascii_codes_dvorak;
     }
     else {
-        codes = lower_ascii_codes;
+        codes = lower_ascii_codes_dvorak;
     }
 
     uint8_t ascii = codes[byte];
