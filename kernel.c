@@ -42,7 +42,8 @@ void kernel_main(struct multiboot_info *mi)
     uint32_t total_frames = high_pages + low_pages;
 
     set_vmode();
-
+    set_vesa_color(make_vesa_color(0x8F, 0x8F, 0x8F));
+    
     init_gdt();
 
     remap_pic();
@@ -54,29 +55,34 @@ void kernel_main(struct multiboot_info *mi)
 
     initialize_paging(total_frames, get_framebuffer_addr(), get_framebuffer_length());
     malloc_stats();
-    printf("Done setting up paging.\nKernel is ready to go!!!\n\n");
+    printf("Done setting up paging.\n");
+    
+    set_vesa_color(make_vesa_color(0xFF, 0xFF, 0xFF));
+    printf("Kernel is ready to go!!!\n\n");
+
+    
     // Kernel ready to go!
 
     printf("Creating fat32 filesystem.\n");
-    f32 *fs = makeFilesystem("");
-    if(fs == NULL) {
+    master_fs = makeFilesystem("");
+    if(master_fs == NULL) {
         printf("Failed to create fat32 filesystem. Disk may be corrupt.\n");
         return;
     }
     printf("Starting fat32 console.\n");
 
-    fat32_console(fs);
+    fat32_console(master_fs);
 
     printf("FAT32 shell exited. It is safe to power off.\nSystem is in free-typing mode.\n");
 
     void *initial = NULL;
 
     for(int i = 0; i < 0x3FFFFFF; i++) {
-        void **temp = kmalloc(0xF);
+        void **temp = kmalloc(0xFFF);
         temp[0] = initial;
         initial=temp;
     }
-
+//
 //    printf("Memory list head: %x\n", initial);
 //    while(initial) {
 //        void *next = ((void **)initial)[0];
@@ -84,10 +90,10 @@ void kernel_main(struct multiboot_info *mi)
 //        initial = next;
 //    }
 //    
-//    while(1) {
-//        char c = get_ascii_char();
-//        printf("%c", c);
-//    };
+    while(1) {
+        char c = get_ascii_char();
+        printf("%c", c);
+    };
     printf("Halting.\n");
 
 }

@@ -62,7 +62,7 @@ uint32_t *framebuffer = 0;
 
 uint32_t chars[CHARCOUNT * CHARLEN];
 
-void populate_chars(uint32_t vesa_color) {
+void populate_chars(uint32_t vesa_fg_color, uint32_t vesa_bg_color) {
     for(unsigned char c = ' '; c < '~'; c++) {
         unsigned short offset = (c - 31) * 16 ;
 
@@ -71,10 +71,10 @@ void populate_chars(uint32_t vesa_color) {
             uint32_t *abs_row = chars + CHAROFF(c) + (row * 8);
             for(int i = 0; i < 8; i++) {
                 if(font.Bitmap[offset + row] & mask) {
-                    abs_row[i] = vesa_color; //0xFFFFFFFF;
+                    abs_row[i] = vesa_fg_color; //0xFFFFFFFF;
                 }
                 else {
-                    abs_row[i] = 0;
+                    abs_row[i] = vesa_bg_color;
                 }
                 mask = (mask >> 1);
             }
@@ -133,7 +133,8 @@ void set_vmode() {
     terminal_set_status = vesa_set_status;
     terminal_set_cursor = vesa_set_cursor;
     mib = *loc_mib;
-    populate_chars(make_vesa_color(255, 255, 255));
+    set_vesa_color(make_vesa_color(255, 255, 255));
+    set_vesa_background(make_vesa_color(0, 0, 0));
 }
 
 uint32_t make_vesa_color(uint8_t r, uint8_t g, uint8_t b) {
@@ -143,8 +144,24 @@ uint32_t make_vesa_color(uint8_t r, uint8_t g, uint8_t b) {
     return red | green | blue;
 }
 
-void set_vesa_color(uint8_t r, uint8_t g, uint8_t b) {
-    populate_chars(make_vesa_color(r, g, b));
+uint32_t current_fg, current_bg;
+
+void set_vesa_color(uint32_t color) {
+    current_fg = color;
+    populate_chars(current_fg, current_bg);
+}
+
+void set_vesa_background(uint32_t color) {
+    current_bg = color;
+    populate_chars(current_fg, current_bg);
+}
+
+uint32_t get_vesa_color() {
+    return current_fg;
+}
+
+uint32_t get_vesa_background() {
+    return current_bg;
 }
 
 void draw_pixel_at(int x, int y, uint32_t color) {

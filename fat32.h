@@ -72,4 +72,6 @@ void delFile(f32 *fs, struct directory *dir, char *filename);
 void print_directory(f32 *fs, struct directory *dir);
 uint32_t count_free_clusters(f32 *fs);
 
+extern f32 *master_fs;
+
 #endif

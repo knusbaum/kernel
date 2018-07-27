@@ -2,6 +2,7 @@
 #include "kernio.h"
 #include "terminal.h"
 #include "vesa.h"
+#include "kheap.h"
 
 extern void halt();
 
@@ -78,6 +79,54 @@ int strcmp(const char *s1, const char *s2) {
     return 0;
 }
 
+char *strdup(const char *s) {
+    char *news = kmalloc(strlen(s) + 1);
+    char *temp = news;
+    while(*temp++ = *s++);
+    return news;
+}
+
+char *strchr(const char *s, int c) {
+    while(*s) {
+        if(*s == c) return s;
+        s++;
+    }
+    return NULL;
+}
+
+char *estrtok_r(char *str, const char *delim, char **saveptr) {
+    char *begin;
+    if(str) {
+        begin = str;
+    }
+    else if (*saveptr) {
+        begin = *saveptr;
+    }
+    else {
+        return NULL;
+    }
+
+    while(strchr(delim, begin[0])) {
+        begin++;
+    }
+
+
+    char *next = NULL;
+    for(int i = 0; i < strlen(delim); i++) {
+        char *temp = strchr(begin, delim[i]);
+        if(temp < next || next == NULL) {
+            next = temp;
+        }
+    }
+    if(!next) {
+        *saveptr = NULL;
+        return begin;
+    }
+    *next = 0;
+    *saveptr=next+1;
+    return begin;
+}
+
 int coerce_int(char *s, uint32_t *val) {
     uint32_t result = 0;
 
@@ -133,7 +182,8 @@ uint8_t hex_char(uint8_t byte)
 
 void PANIC(char *err) {
     terminal_set_cursor(0, 1);
-    set_vesa_color(255, 0, 0);
+    set_vesa_color(make_vesa_color(0, 0, 0));
+    set_vesa_background(make_vesa_color(255, 0, 0));
 //    terminal_setcolor(make_color(COLOR_DARK_GREY, COLOR_BLACK));
 //    terminal_settextcolor(make_color(COLOR_RED, COLOR_BLACK));
     printf("PANIC: %s", err);

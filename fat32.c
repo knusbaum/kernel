@@ -8,7 +8,8 @@
 #include "common.h"
 #include "kernio.h"
 
-int x;
+f32 *master_fs;
+//int x;
 
 struct f32 {
     //FILE *f;
