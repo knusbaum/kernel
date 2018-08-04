@@ -16,7 +16,7 @@ char * itos(uint32_t myint, char buffer[], int bufflen);
 size_t strlen(const char* str);
 int strcmp(const char *s1, const char *s2);
 char *strdup(const char *s);
-
+char *strchr(const char *s, int c);
 char *strtok_r(char *str, const char *delim, char **saveptr);
 
 int coerce_int(char *s, uint32_t *val);
