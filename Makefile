@@ -55,9 +55,6 @@ gdt_asm.o : gdt_asm.nasm
 idt_asm.o : idt_asm.nasm
 	nasm -f elf idt_asm.nasm -o idt_asm.o
 
-#idt_asm.o : idt_asm.s
-#	$(AS) --32 -ggdb idt_asm.s -o idt_asm.o
-
 port.o : port.s
 	$(AS) --32 -ggdb port.s -o port.o
 
@@ -69,11 +66,15 @@ f32.disk:
 	dd if=/dev/zero of=f32.disk bs=1M count=100
 	mkfs.fat -F32 f32.disk -s 1
 
-populate_disk: f32.disk
+mount_disk: f32.disk
 	mkdir -p fat32
 	sudo mount -rw f32.disk fat32
+
+populate_disk: mount_disk
 	sudo cp *.c *.h fat32
 	sudo cp -R deps fat32/
+	sudo mkdir -p fat32/foo/bar/baz/boo/dep/doo/poo/goo/
+	sudo cp common.h fat32/foo/bar/baz/boo/dep/doo/poo/goo/tood.txt
 	sleep 1
 	sudo umount fat32
 	-@rm -Rf fat32

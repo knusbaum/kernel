@@ -3,6 +3,16 @@
 #include "common.h"
 #include <stdarg.h>
 
+int BOOTED;
+
+// Potential base for stdarg. Doesn't work.
+// We need to know more about how gcc handles the stack.
+//typedef char *va_list;
+//#define va_start(ap,parmn) (void)((ap) = (char*)(&(parmn) + 1))
+//#define va_end(ap) (void)((ap) = 0)
+//#define va_arg(ap, type)                          \
+//    (((type*)((ap) = ((ap) + sizeof(type))))[-1])
+
 int printf(char *fmt, ...) {
     //return;
     va_list argp;

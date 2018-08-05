@@ -6,7 +6,7 @@
 #include "idt.h"
 #include "common.h"
 #include "kernio.h"
-#include <stdint.h>
+#include "stdint.h"
 
 // A struct describing an interrupt gate.
 struct idt_entry_struct

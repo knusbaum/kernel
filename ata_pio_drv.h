@@ -1,7 +1,7 @@
 #ifndef ATA_PIO_DRV_H
 #define ATA_PIO_DRV_H
 
-#include <stdint.h>
+#include "stdint.h"
 
 uint8_t identify();
 void ata_pio_read28(uint32_t LBA, uint8_t sectorcount, uint8_t *target);

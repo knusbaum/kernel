@@ -1,5 +1,5 @@
-#include <stdint.h>
-#include <stddef.h>
+#include "stdint.h"
+#include "stddef.h"
 #include "isr.h"
 #include "paging.h"
 #include "frame.h"
@@ -88,10 +88,10 @@ void initialize_paging(uint32_t total_frames, uint32_t ident_addr, uint32_t iden
     initialized = 1;
 
 
-    printf("Initializing kheap!\n");
+    printf("Initializing kheap... ");
     // Set up the kernel heap!
     initialize_kheap(heap_start);
-    printf("DONE!\n");
+    printf("Done\n");
 }
 
 void switch_page_directory(struct page_directory *dir)

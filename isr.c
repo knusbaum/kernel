@@ -8,7 +8,7 @@
 #include "kernio.h"
 #include "pic.h"
 #include "port.h"
-#include <stdint.h>
+#include "stdint.h"
 
 extern void halt();
 

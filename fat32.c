@@ -1,7 +1,3 @@
-#include <stdint.h>
-#include <strings.h>
-#include <errno.h>
-#include <ctype.h>
 #include "fat32.h"
 #include "ata_pio_drv.h"
 #include "kheap.h"
@@ -11,16 +7,16 @@
 f32 *master_fs;
 //int x;
 
-struct f32 {
-    //FILE *f;
-    uint32_t *FAT;
-    struct bios_parameter_block bpb;
-    uint32_t partition_begin_sector;
-    uint32_t fat_begin_sector;
-    uint32_t cluster_begin_sector;
-    uint32_t cluster_size;
-    uint32_t cluster_alloc_hint;
-};
+//struct f32 {
+//    //FILE *f;
+//    uint32_t *FAT;
+//    struct bios_parameter_block bpb;
+//    uint32_t partition_begin_sector;
+//    uint32_t fat_begin_sector;
+//    uint32_t cluster_begin_sector;
+//    uint32_t cluster_size;
+//    uint32_t cluster_alloc_hint;
+//};
 
 static void read_bpb(f32 *fs, struct bios_parameter_block *bpb);
 static uint32_t sector_for_cluster(f32 *fs, uint32_t cluster);
@@ -132,7 +128,10 @@ static uint32_t sector_for_cluster(f32 *fs, uint32_t cluster) {
 }
 
 // CLUSTER NUMBERS START AT 2 (for some reason...)
-static void getCluster(f32 *fs, uint8_t *buff, uint32_t cluster_number) {
+void getCluster(f32 *fs, uint8_t *buff, uint32_t cluster_number) { // static
+    if(cluster_number >= EOC) {
+        PANIC("Can't get cluster. Hit End Of Chain.");
+    }
     uint32_t sector = sector_for_cluster(fs, cluster_number);
     uint32_t sector_count = fs->bpb.sectors_per_cluster;
     getSector(fs, buff, sector, sector_count);
@@ -144,7 +143,7 @@ static void putCluster(f32 *fs, uint8_t *buff, uint32_t cluster_number) {
     putSector(fs, buff, sector, sector_count);
 }
 
-static uint32_t get_next_cluster_id(f32 *fs, uint32_t cluster) {
+uint32_t get_next_cluster_id(f32 *fs, uint32_t cluster) { // static
     return fs->FAT[cluster] & 0x0FFFFFFF;
 }
 
@@ -310,7 +309,7 @@ static uint8_t *locate_entries(f32 *fs, uint8_t *cluster_buffer, struct director
         }
 
         uint32_t next_cluster = fs->FAT[cluster];
-        if(next_cluster >= 0x0FFFFFF8) {
+        if(next_cluster >= EOC) {
             next_cluster = allocateCluster(fs);
             if(!next_cluster) {
                 return 0;
@@ -387,13 +386,11 @@ static void write_long_filename_entries(uint8_t *start, uint32_t num_entries, ch
 }
 
 f32 *makeFilesystem(char *fatSystem) {
-    printf("KMallocing.\n");
     f32 *fs = kmalloc(sizeof (struct f32));
-    printf("Done!\n");
     if(!identify()) {
         return NULL;
     }
-    printf("Identified!\n");
+    printf("Filesystem identified!\n");
     read_bpb(fs, &fs->bpb);
 
     trim_spaces(fs->bpb.system_id, 8);
@@ -515,7 +512,7 @@ void next_dir_entry(f32 *fs, uint8_t *root_cluster, uint8_t *entry, uint8_t **ne
         uint32_t bytes_from_prev_chunk = end_of_cluster - entry;
 
         *secondcluster = get_next_cluster_id(fs, cluster);
-        if(*secondcluster >= 0x0FFFFFF8) {
+        if(*secondcluster >= EOC) {
             // There's not another directory cluster to load
             // and the previous entry was invalid!
             // It's possible the filesystem is corrupt or... you know...
@@ -578,14 +575,14 @@ void populate_dir(f32 *fs, struct directory *dir, uint32_t cluster) {
             entry_count++;
         }
         cluster = get_next_cluster_id(fs, cluster);
-        if(cluster >= 0x0FFFFFF8) break;
+        if(cluster >= EOC) break;
     }
     dir->num_entries = entry_count;
 }
 
 static void zero_FAT_chain(f32 *fs, uint32_t start_cluster) {
     uint32_t cluster = start_cluster;
-    while(cluster < 0x0FFFFFF8 && cluster != 0) {
+    while(cluster < EOC && cluster != 0) {
         uint32_t next_cluster = fs->FAT[cluster];
         fs->FAT[cluster] = 0;
         cluster = next_cluster;
@@ -647,7 +644,7 @@ void delFile(f32 *fs, struct directory *dir, char *filename) { //struct dir_entr
 
         }
         cluster = get_next_cluster_id(fs, cluster);
-        if(cluster >= 0x0FFFFFF8) return;
+        if(cluster >= EOC) return;
     }
 }
 
@@ -677,7 +674,7 @@ uint8_t *readFile(f32 *fs, struct dir_entry *dirent) {
         copiedbytes += to_copy;
 
         cluster = get_next_cluster_id(fs, cluster);
-        if(cluster >= 0x0FFFFFF8) break;
+        if(cluster >= EOC) break;
     }
     return file;
 }
@@ -826,7 +823,7 @@ void print_directory(f32 *fs, struct directory *dir) {
         uint32_t cluster_count = 1;
         while(1) {
             cluster = fs->FAT[cluster];
-            if(cluster >= 0x0FFFFFF8) break;
+            if(cluster >= EOC) break;
             if(cluster == 0) {
                 PANIC("BAD CLUSTER CHAIN! FS IS CORRUPT!");
             }

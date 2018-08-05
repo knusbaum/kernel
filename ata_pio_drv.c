@@ -74,9 +74,9 @@ uint8_t identify() {
     
     if(status == 0) return 0;
 
-    printf("Status indicates presence of a drive. Polling while STAT_BSY.\n");
+    printf("Status indicates presence of a drive. Polling while STAT_BSY... ");
     while(status & STAT_BSY) {
-      printf("inb(ATA_PRIMARY_COMM_REGSTAT);\n");
+      printf("\ninb(ATA_PRIMARY_COMM_REGSTAT);... ");
       status = inb(ATA_PRIMARY_COMM_REGSTAT);
     }
     printf("Done.\n");

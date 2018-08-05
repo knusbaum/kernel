@@ -1,6 +1,6 @@
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "stdio.h"
+#include "stddef.h"
+#include "stdint.h"
 #include "terminal.h"
 #include "gdt.h"
 #include "idt.h"
@@ -43,7 +43,6 @@ void kernel_main(struct multiboot_info *mi)
 
     set_vmode();
     set_vesa_color(make_vesa_color(0x8F, 0x8F, 0x8F));
-    
     init_gdt();
 
     remap_pic();
@@ -56,11 +55,10 @@ void kernel_main(struct multiboot_info *mi)
     initialize_paging(total_frames, get_framebuffer_addr(), get_framebuffer_length());
     malloc_stats();
     printf("Done setting up paging.\n");
-    
+
     set_vesa_color(make_vesa_color(0xFF, 0xFF, 0xFF));
     printf("Kernel is ready to go!!!\n\n");
 
-    
     // Kernel ready to go!
 
     printf("Creating fat32 filesystem.\n");
@@ -69,27 +67,34 @@ void kernel_main(struct multiboot_info *mi)
         printf("Failed to create fat32 filesystem. Disk may be corrupt.\n");
         return;
     }
+
+    printf("Finding /foo/bar/baz/boo/dep/doo/poo/goo/tood.txt.\n");
+
+    FILE *f = fopen("/foo/bar/baz/boo/dep/doo/poo/goo/tood.txt", NULL);
+    if(f) {
+        #define BCOUNT 1000
+        uint8_t c[BCOUNT];
+        printf("READING:.................................\n");
+        int count, total;
+        while((count = fread(&c, BCOUNT, 1, f)), count > 0) {
+            for(int i = 0; i < count; i++) {
+                printf("%c", c[i]);
+            }
+            total += count;
+        }
+        fclose(f);
+        printf("Read %d bytes.\n", total);
+    }
+    else {
+        printf("File not found. Continuing.\n");
+    }
+
     printf("Starting fat32 console.\n");
 
     fat32_console(master_fs);
 
     printf("FAT32 shell exited. It is safe to power off.\nSystem is in free-typing mode.\n");
 
-    void *initial = NULL;
-
-    for(int i = 0; i < 0x3FFFFFF; i++) {
-        void **temp = kmalloc(0xFFF);
-        temp[0] = initial;
-        initial=temp;
-    }
-//
-//    printf("Memory list head: %x\n", initial);
-//    while(initial) {
-//        void *next = ((void **)initial)[0];
-//        kfree(initial);
-//        initial = next;
-//    }
-//    
     while(1) {
         char c = get_ascii_char();
         printf("%c", c);

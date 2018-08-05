@@ -94,7 +94,7 @@ char *strchr(const char *s, int c) {
     return NULL;
 }
 
-char *estrtok_r(char *str, const char *delim, char **saveptr) {
+char *strtok_r(char *str, const char *delim, char **saveptr) {
     char *begin;
     if(str) {
         begin = str;

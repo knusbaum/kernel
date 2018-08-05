@@ -1,8 +1,8 @@
 #ifndef TERMINAL_H
 #define TERMINAL_H
 
-#include <stddef.h>
-#include <stdint.h>
+#include "stddef.h"
+#include "stdint.h"
 
 #define ESC (0x1B)
 #define BS  (0x08)

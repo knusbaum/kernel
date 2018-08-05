@@ -1,5 +1,5 @@
 #include "gdt.h"
-#include <stdint.h>
+#include "stdint.h"
 
 // This structure contains the value of one GDT entry.
 // We use the attribute 'packed' to tell GCC not to change

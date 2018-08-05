@@ -1,6 +1,9 @@
 #ifndef STDIO_H
 #define STDIO_H
 
+#include "stdint.h"
+#include "stddef.h"
+
 typedef struct FILE FILE;
 
 FILE *fopen(const char *pathname, const char *mode);

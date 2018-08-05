@@ -1,7 +1,7 @@
 #ifndef FAT32_H
 #define FAT32_H
 
-#include <stdint.h>
+#include "stdint.h"
 
 struct bios_parameter_block {
     uint16_t bytes_per_sector;          // IMPORTANT
@@ -53,7 +53,30 @@ struct directory {
     uint32_t num_entries;
 };
 
+// REFACTOR
+// I want to get rid of this from the header. This should be internal
+// implementation, but for now, it's too convenient for stdio.c impl.
+
+// EOC = End Of Chain
+#define EOC 0x0FFFFFF8
+
+struct f32 {
+    //FILE *f;
+    uint32_t *FAT;
+    struct bios_parameter_block bpb;
+    uint32_t partition_begin_sector;
+    uint32_t fat_begin_sector;
+    uint32_t cluster_begin_sector;
+    uint32_t cluster_size;
+    uint32_t cluster_alloc_hint;
+};
+
 typedef struct f32 f32;
+
+void getCluster(f32 *fs, uint8_t *buff, uint32_t cluster_number);
+uint32_t get_next_cluster_id(f32 *fs, uint32_t cluster);
+
+// END REFACTOR
 
 f32 *makeFilesystem(char *fatSystem);
 void destroyFilesystem(f32 *fs);

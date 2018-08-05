@@ -1,4 +1,4 @@
-#include <stddef.h>
+#include "stddef.h"
 #include "common.h"
 #include "fat32.h"
 #include "keyboard.h"
@@ -9,18 +9,23 @@
 int handle_commands(f32 *fs, struct directory *dir, char *buffer);
 
 void fat32_console(f32 *fs) {
-
-    printf("Reading root directory.\n");
+    printf("\n\nStarting up Fat32 console...\n");
+    printf("Reading root directory... ");
     struct directory dir;
     populate_root_dir(fs, &dir);
-    printf("Done reading root directory.\n");
+    printf("Done.\n");
 
     uint32_t bufflen = 24;
-    printf("Entering command line!\n\n");
 
-    printf("Root directory:\n");
-    print_directory(fs, &dir);
-    printf("Hello! Type 'help' to see available commands.\n");
+    if(dir.num_entries > 0) {
+        printf("Root directory:\n");
+        print_directory(fs, &dir);
+    }
+    else {
+        printf("Root directory empty.\n");
+    }
+    printf("Welcome to the Version 1 Fat32 console.\n");
+    printf("Type 'help' to see available commands.\n");
 
     char buffer[bufflen + 1];
     while(1) {

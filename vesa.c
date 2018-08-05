@@ -135,6 +135,7 @@ void set_vmode() {
     mib = *loc_mib;
     set_vesa_color(make_vesa_color(255, 255, 255));
     set_vesa_background(make_vesa_color(0, 0, 0));
+    printf("\nVESA initialized.\nSet resoution to: 1280x720x32\n");
 }
 
 uint32_t make_vesa_color(uint8_t r, uint8_t g, uint8_t b) {
