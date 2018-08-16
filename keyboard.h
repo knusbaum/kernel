@@ -3,5 +3,6 @@
 
 void initialize_keyboard();
 char get_ascii_char();
+int has_pressed_keys();
 
 #endif

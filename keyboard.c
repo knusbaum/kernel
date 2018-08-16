@@ -328,3 +328,7 @@ char get_ascii_char() {
     }
 
 }
+
+int has_pressed_keys() {
+    return (kb_buff_hd != kb_buff_tl);
+}

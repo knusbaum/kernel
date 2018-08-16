@@ -27,10 +27,12 @@ all: $(KERNEL_IMG)
 clean:
 	-@rm *.o *~
 	-@rm -R deps
+	-@make -C lisp clean
 
 nuke: clean
 	-@rm $(KERNEL_IMG)
 	-@rm f32.disk
+	-@make -C lisp nuke
 
 run: $(KERNEL_IMG) f32.disk
 	qemu-system-i386 --kernel $(KERNEL_IMG) -drive file=f32.disk,format=raw -m size=4096
@@ -79,8 +81,11 @@ populate_disk: mount_disk
 	sudo umount fat32
 	-@rm -Rf fat32
 
-$(KERNEL_IMG) : $(OBJECTS) linker.ld
-	$(CC) $(LDFLAGS) -T linker.ld -o myos.bin $(OBJECTS)
+lisp_obj:
+	make -C lisp all
+
+$(KERNEL_IMG) : $(OBJECTS) lisp_obj linker.ld
+	$(CC) $(LDFLAGS) -T linker.ld -o myos.bin $(OBJECTS) $(shell ls lisp/*.o)
 
 ## Realmode uses nasm
 #realmode.o : realmode.s

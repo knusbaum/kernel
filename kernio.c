@@ -47,6 +47,14 @@ int printf(char *fmt, ...) {
         case '%':
             terminal_putchar('%');
             break;
+        case 'l':
+            if(p[1] == 'd') {
+                p++;
+                long int j = va_arg(argp, long int);
+                terminal_write_dec(j);
+            }
+            break;
+            
         default:
             terminal_putchar('%');
             terminal_putchar(*p);

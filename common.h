@@ -19,9 +19,22 @@ char *strdup(const char *s);
 char *strchr(const char *s, int c);
 char *strtok_r(char *str, const char *delim, char **saveptr);
 
+char *strcpy(char *dest, const char *src);
+char *strncpy(char *dest, const char *src, size_t n);
+
+int isdigit(int c);
+int isspace(int c);
+long int strtol(const char *nptr, char **endptr, int base);
+
 int coerce_int(char *s, uint32_t *val);
 uint8_t hex_char(uint8_t byte);
 
 void PANIC(char *err);
+
+/******** MOVE THIS ********/
+#include "kheap.h"
+#define malloc kmalloc
+#define realloc krealloc
+#define free kfree
 
 #endif

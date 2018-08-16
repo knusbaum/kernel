@@ -31,6 +31,7 @@ extern "C" /* Use C linkage for kernel_main. */
 extern void pause();
 extern char _binary_f32_disk_start;
 
+int main(void);
 
 
 void kernel_main(struct multiboot_info *mi)
@@ -56,6 +57,8 @@ void kernel_main(struct multiboot_info *mi)
     malloc_stats();
     printf("Done setting up paging.\n");
 
+    setup_stdin();
+    
     set_vesa_color(make_vesa_color(0xFF, 0xFF, 0xFF));
     printf("Kernel is ready to go!!!\n\n");
 
@@ -89,11 +92,15 @@ void kernel_main(struct multiboot_info *mi)
         printf("File not found. Continuing.\n");
     }
 
-    printf("Starting fat32 console.\n");
+//    printf("Starting fat32 console.\n");
 
-    fat32_console(master_fs);
+//    fat32_console(master_fs);
 
-    printf("FAT32 shell exited. It is safe to power off.\nSystem is in free-typing mode.\n");
+//    printf("FAT32 shell exited.\n");
+
+    main();
+
+    printf("LISP VM exited. It is safe to power off.\nSystem is in free-typing mode.\n");
 
     while(1) {
         char c = get_ascii_char();
