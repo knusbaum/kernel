@@ -7,6 +7,8 @@
 
 #define INITIAL_HEAP_SIZE (0x1000 * INITIAL_HEAP_PAGE_COUNT)
 
+#define MAGIC (0xFEEDBACC)
+
 struct header {
     uint8_t free;
     uint32_t size;
@@ -16,10 +18,12 @@ struct free_header {
     struct header h;
     struct free_header *next;
     struct free_header *prev;
+    uint32_t magic;
 };
 
 
 struct footer {
+    uint32_t magic;
     uint32_t size;
 };
 
@@ -223,6 +227,8 @@ void *kmalloc_ap(uint32_t size, uint8_t align, uint32_t *phys) {
         return NULL;
     }
 
+    size += 100;
+    
     if(memhead == NULL) {
         PANIC("kheap not initialized.");
     }
@@ -292,8 +298,10 @@ void *kmalloc_ap(uint32_t size, uint8_t align, uint32_t *phys) {
     }
 
     block->h.size = needed_size;
+    block->magic = MAGIC;
     struct footer *block_footer = (struct footer *)((char *)block + needed_size - sizeof (struct footer));
     block_footer->size = needed_size;
+    block_footer->magic = MAGIC;
 
     // We have oficcially made an allocation.
     allocations++;
@@ -304,6 +312,7 @@ void *kmalloc_ap(uint32_t size, uint8_t align, uint32_t *phys) {
         struct page *p = get_kernel_page((uint32_t)return_addr, 0);
         *phys = (p->frame << 12) | (((uint32_t)return_addr) & 0xFFF);
     }
+    printf("Malloc: %x\n", return_addr);
     return return_addr;
 }
 
@@ -334,11 +343,21 @@ static struct free_header *get_next_block(struct header *block_head) {
 }
 
 static void do_kfree(void *p) {
+    printf("Free %x\n", p);
     if(p == NULL) {
         return;
     }
 
     struct free_header *block_header = (struct free_header *)(((char *)p) - sizeof (struct header));
+    if(block_header->magic != MAGIC) {
+        printf("MAGIC=%x\n", block_header->magic);
+        PANIC("HEAP CORRUPT HEADER MAGIC INCORRECT.");
+    }
+    struct footer *foot = (struct footer *)(((char *)p) + block_header->h.size - sizeof (struct footer));
+    if(foot->magic != MAGIC) {
+        printf("MAGIC=%x\n", foot->magic);
+        PANIC("HEAP CORRUPT FOOTER MAGIC INCORRECT.");
+    }
     block_header->h.free = 1;
     heap_free += block_header->h.size;
 
