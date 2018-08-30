@@ -144,6 +144,9 @@ static void putCluster(f32 *fs, uint8_t *buff, uint32_t cluster_number) {
 }
 
 uint32_t get_next_cluster_id(f32 *fs, uint32_t cluster) { // static
+//    printf("fs->FAT: %x\n", fs->FAT);
+//    printf("cluster: %x\n", cluster);
+//    printf("fs->FAT[cluster]: %x\n", fs->FAT + cluster);
     return fs->FAT[cluster] & 0x0FFFFFFF;
 }
 
@@ -663,6 +666,7 @@ uint8_t *readFile(f32 *fs, struct dir_entry *dirent) {
     uint32_t copiedbytes = 0;
     while(1) {
         uint8_t cbytes[fs->cluster_size];
+        printf("Cluster: %d\n", cluster);
         getCluster(fs, cbytes, cluster);
 
         uint32_t remaining = dirent->file_size - copiedbytes;

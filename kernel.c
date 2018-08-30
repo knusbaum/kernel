@@ -92,13 +92,13 @@ void kernel_main(struct multiboot_info *mi)
         printf("File not found. Continuing.\n");
     }
 
-    printf("Starting fat32 console.\n");
+//    printf("Starting fat32 console.\n");
 
-    fat32_console(master_fs);
+//    fat32_console(master_fs);
+//
+//    printf("FAT32 shell exited.\n");
 
-    printf("FAT32 shell exited.\n");
-
-    //main();
+    main();
 
     printf("LISP VM exited. It is safe to power off.\nSystem is in free-typing mode.\n");
 

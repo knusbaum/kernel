@@ -514,9 +514,13 @@ void resolve(context_stack *cs) {
     }
 }
 
+char get_ascii_char();
 
 void vm_macroexpand_rec(context_stack *cs, long rec) {
     object *o = __top();
+//    printf("vm_macroexpand_rec (top): ");
+//    print_object(o);
+//    printf("\n");
     if(rec >= 4096) {
         printf("Cannot expand macro. Nesting too deep.\n");
         //abort();
@@ -526,6 +530,11 @@ void vm_macroexpand_rec(context_stack *cs, long rec) {
     if(otype(o) == O_CONS) {
         object *fsym = ocar(cs, o);
         object *func = lookup_fn(cs, fsym);
+//        printf("fsym: ");
+//        print_object(fsym);
+//        printf("\nfunc: ");
+//        print_object(func);
+//        printf("\n");
         if(func && otype(func) == O_MACRO_COMPILED) {
             // Don't eval the arguments.
             long num_args = 0;
@@ -547,10 +556,29 @@ void vm_macroexpand_rec(context_stack *cs, long rec) {
                     vm_error_impl(cs, interns("SIG-ERROR"));
                 }
             }
+//            printf("Running function: ");
+//            print_object(func);
+//            printf("\n");
 
-            run_vm(cs, oval_fn_compiled(cs, func));
+            compiled_chunk *func_cc = oval_fn_compiled(cs, func);
+//            map_t *addrs_to_name = map_reverse(addrs);
+//            for(int i = 0; i < func_cc->b_off; i++) {
+//                printf("%d: %x:%s ", i, func_cc->bs[i].instr, (char *)map_get(addrs_to_name, func_cc->bs[i].instr));
+//                if(func_cc->bs[i].has_arg) {
+//                    printf("<");
+//                    print_object(func_cc->bs[i].arg);
+//                    printf(">");
+//                }
+//                printf("\n");
+//                get_ascii_char();
+//            }
+//            map_destroy(addrs_to_name);
+            run_vm(cs, func_cc);
 
             object *exp = pop();
+//            printf("Expression: ");
+//            print_object(exp);
+//            printf("\n");
             for(int i = 0; i < num_args; i++) {
                 pop();
             }
@@ -594,7 +622,7 @@ void vm_gensym(context_stack *cs, long variance) {
     }
 
     char *gensym = malloc(18); // 10 digits + "gensym-"(7) + \0
-    sprintf(gensym, "gensym-%u", gensym_num++);
+    sprintf(gensym, "gensym-%d", gensym_num++);
     object *new_gensym = interns(gensym);
     free(gensym);
     __push(new_gensym);
@@ -615,6 +643,8 @@ void vm_error(context_stack *cs, long variance) {
 void vm_error_impl(context_stack *cs, object *sym) {
     (void)(cs);
     (void)(sym);
+    printf("Signal: ");
+    print_object(sym);
     PANIC("LISP VM ERROR.");
 //
 //    for(ssize_t i = trap_stack_off - 1; i >= 0; i--) {
@@ -700,6 +730,9 @@ void vm_eval(context_stack *cs, long variance) {
 //    }
 
     object *o = __pop();
+    printf("Macroexpanded: ");
+    print_object(o);
+    printf("\n");
     compile_form(cc, cs, o);
     run_vm(cs, cc);
     free_compiled_chunk(cc);
@@ -725,9 +758,9 @@ void vm_read(context_stack *cs, long variance) {
     }
     object *o = next_form(p, cs);
     if(o) {
-//        printf("Result: ");
-//        print_object(o);
-//        printf("\n");
+        printf("Result: ");
+        print_object(o);
+        printf("\n");
         __push(o);
     }
     else {
@@ -825,6 +858,7 @@ push:
     //print_object(bs->arg);
     //printf("\n");
     __push(bs->arg);
+    //dump_stack();
     NEXTI;
 pop:
     //printf("%ld@%p POP: ", bs - cc->bs, cc);
@@ -836,6 +870,7 @@ pop:
 call:
     //printf("%ld@%p CALL (%ld)\n", bs - cc->bs, cc, bs->variance);
     call(cs, bs->variance);
+    //dump_stack();
     NEXTI;
 resolve_sym:
     //printf("%ld@%p RESOLVE_SYM\n", bs - cc->bs, cc);

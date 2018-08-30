@@ -3,6 +3,7 @@
 
 #include "stddef.h"
 #include "stdint.h"
+#include "isr.h"
 
 void *memset(void *p, int c, size_t count);
 void *memcpy(void *dest, const void *src, size_t n);
@@ -30,6 +31,7 @@ int coerce_int(char *s, uint32_t *val);
 uint8_t hex_char(uint8_t byte);
 
 void PANIC(char *err);
+void dump_registers(registers_t *regs);
 
 /******** MOVE THIS ********/
 #include "kheap.h"

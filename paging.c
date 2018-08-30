@@ -178,5 +178,6 @@ void page_fault(registers_t regs)
     if (us) {printf("user-mode ");}
     if (reserved) {printf("reserved ");}
     printf(") at %x\n", faulting_address);
+    dump_registers(&regs);
     PANIC("Page fault");
 }

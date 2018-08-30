@@ -29,4 +29,6 @@ map_iterator *map_iterator_next(map_iterator *mi);
 struct map_pair map_iterator_values(map_iterator *mi);
 void destroy_map_iterator(map_iterator *mi);
 
+map_t *map_reverse(map_t *m);
+
 #endif

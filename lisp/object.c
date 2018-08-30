@@ -339,7 +339,7 @@ object *ocar(context_stack *cs, object *o) {
         return obj_nil();
     }
     if(o->type != O_CONS) {
-        printf("Expected CONS cell, but have: ");
+        printf("(ocar) Expected CONS cell, but have: ");
         print_object(o);
         printf("\n");
         //abort();
@@ -355,7 +355,7 @@ object *ocdr(context_stack *cs, object *o) {
         return obj_nil();
     }
     if(o->type != O_CONS) {
-        printf("Expected CONS cell, but have: ");
+        printf("(ocdr) Expected CONS cell, but have: ");
         print_object(o);
         printf("\n");
         //abort();
@@ -368,7 +368,7 @@ object *ocdr(context_stack *cs, object *o) {
 
 object *osetcar(context_stack *cs, object *o, object *car) {
     if(o->type != O_CONS) {
-        printf("Expected CONS cell, but have: ");
+        printf("(osetcar) Expected CONS cell, but have: ");
         print_object(o);
         printf("\n");
         //abort();
@@ -382,7 +382,7 @@ object *osetcar(context_stack *cs, object *o, object *car) {
 
 object *osetcdr(context_stack *cs, object *o, object *cdr) {
     if(o->type != O_CONS) {
-        printf("Expected CONS cell, but have: ");
+        printf("(osetcdr) Expected CONS cell, but have: ");
         print_object(o);
         printf("\n");
         //abort();

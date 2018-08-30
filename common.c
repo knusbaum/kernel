@@ -281,3 +281,11 @@ void PANIC(char *err) {
     printf("PANIC: %s", err);
     halt();
 }
+
+void dump_registers(registers_t *regs) {
+    printf("DS: %x\nEDI: %x ESI: %x EBP: %x ESP: %x\nEBX: %x EDX: %x ECX: %x EAX: %x\nint_no: %x err_code: %x\nEIP: %x CS: %x\nEFLAGS: %x\nUSERESP: %x SS: %x",
+           regs->ds,
+           regs->edi, regs->esi, regs->ebp, regs->esp, regs->ebx, regs->edx, regs->ecx, regs->eax,
+           regs->int_no, regs->err_code,
+           regs->eip, regs->cs, regs->eflags, regs->useresp, regs->ss);
+}

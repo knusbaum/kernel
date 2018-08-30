@@ -51,7 +51,7 @@ int main(void) {
 
 //    pthread_t gc_thread;
 //    pthread_create(&gc_thread, NULL, run_gc_loop, cs);
-
+    printf("Starting REPL.\n");
     compiled_chunk *cc = repl(cs);
     while(1) {
         //printf("\n\n");

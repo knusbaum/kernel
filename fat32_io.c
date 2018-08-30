@@ -119,7 +119,7 @@ struct fops *fat32_fopen(const char *pathname, const char *mode) {
     printf("Getting entry for path.\n");
     struct dir_entry entry;
     if(!entry_for_path(pathname, &entry)) {
-        kfree(entry.name);
+        //kfree(entry.name);
         return NULL;
     }
     printf("Got entry for path.\n");

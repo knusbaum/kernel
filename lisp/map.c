@@ -119,3 +119,29 @@ void destroy_map_iterator(map_iterator *mi) {
     //memset(mi, 0, sizeof (map_iterator));
     free(mi);
 }
+
+int ptr_eq(void *x, void *y) {
+    return x == y;
+}
+
+map_t *map_reverse(map_t *m) {
+//    map_iterator *mi = iterate_map(m);
+    map_t *revmap = map_create(ptr_eq);
+//    do {
+//        struct map_pair mp = map_iterator_values(mi);
+//        printf("Putting %x -> %s\n", mp.val, (char *)mp.key);
+//        map_put(revmap, mp.val, mp.key);
+//        map_iterator_next(mi);
+//    } while (map_iterator_next(mi));
+//
+//    destroy_map_iterator(mi);
+
+    if(m == NULL) return NULL;
+
+    for(size_t i = 0; i < m->count; i++) {
+//        printf("Putting %x -> %s\n", m->vals[i], (char *)m->keys[i]);
+        map_put(revmap, m->vals[i], m->keys[i]);
+    }
+    
+    return revmap;
+}

@@ -94,9 +94,9 @@ void fat32_console(f32 *fs) {
         }
         else {
             uint8_t *file = readFile(fs, &dir.entries[x]);
-            for(i = 0; i < dir.entries[x].file_size; i++) {
-                printf("%c", file[i]);
-            }
+//            for(i = 0; i < dir.entries[x].file_size; i++) {
+//                printf("%c", file[i]);
+//            }
             kfree(file);
         }
     }

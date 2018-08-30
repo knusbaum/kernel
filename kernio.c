@@ -40,6 +40,7 @@ int printf(char *fmt, ...) {
             i = va_arg(argp, int);
             terminal_write_dec(i);
             break;
+        case 'p':
         case 'x':
             i = va_arg(argp, int);
             terminal_write_hex(i);
@@ -58,6 +59,8 @@ int printf(char *fmt, ...) {
         default:
             terminal_putchar('%');
             terminal_putchar(*p);
+            printf("UNKNOWN SPECIAL CHARACTER: %c", *p);
+            PANIC("UNKNOWN SPECIAL CHARACTER");
             break;
         }
     }
@@ -96,6 +99,7 @@ int sprintf(char *str, char *fmt, ...) {
                 *str++ = *dec++;
             }
             break;
+        case 'p':
         case 'x':
             i = va_arg(argp, int);
             for(int j = 28; j >= 0; j-=4)
@@ -106,9 +110,22 @@ int sprintf(char *str, char *fmt, ...) {
         case '%':
             *str++ = '%';
             break;
+        case 'l':
+            if(p[1] == 'd') {
+                p++;
+                long int j = va_arg(argp, long int);
+                char decbuff[19]; // At most 12 decimal places for 32 bit int.
+                char *dec = itos(j, decbuff, 19);
+                while(*dec) {
+                    *str++ = *dec++;
+                }
+            }
+            break;
         default:
             *str++ = '%';
             *str++ = *p;
+            printf("UNKNOWN SPECIAL CHARACTER: %c", *p);
+            PANIC("UNKNOWN SPECIAL CHARACTER");
             break;
         }
     }

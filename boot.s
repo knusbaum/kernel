@@ -22,7 +22,8 @@
 # then allocating 16384 bytes for it, and finally creating a symbol at the top.
 .section .bootstrap_stack, "aw", @nobits
 stack_bottom:
-.skip 32768         #32 KiB
+    #.skip 32768         #32 KiB
+    .skip 65536
 stack_top:
 
 .section .text

@@ -12,13 +12,13 @@
 struct header {
     uint8_t free;
     uint32_t size;
+    uint32_t magic;
 };
 
 struct free_header {
     struct header h;
     struct free_header *next;
     struct free_header *prev;
-    uint32_t magic;
 };
 
 
@@ -120,6 +120,10 @@ static void expand(uint32_t at_least) {
 
     set_header_footer((char *)block_header, actually_allocated);
 
+    ((struct free_header *)block_header)->h.magic = MAGIC;
+    struct footer *block_footer = (struct footer *)((char *)block_header + actually_allocated - sizeof (struct footer));
+    block_footer->magic = MAGIC;
+    
     do_kfree(block_header + sizeof (struct header));
 }
 
@@ -217,7 +221,9 @@ void *krealloc(void *p, uint32_t size) {
     void *newchunk = kmalloc(size);
     if(newchunk == NULL) return NULL; // Don't know if this can actually happen
 
-    memcpy(newchunk, p, header->size);
+    size_t to_copy = header->size;
+    if(to_copy > size) to_copy = size;
+    memcpy(newchunk, p, to_copy);
     kfree(p);
     return newchunk;
 }
@@ -298,7 +304,7 @@ void *kmalloc_ap(uint32_t size, uint8_t align, uint32_t *phys) {
     }
 
     block->h.size = needed_size;
-    block->magic = MAGIC;
+    block->h.magic = MAGIC;
     struct footer *block_footer = (struct footer *)((char *)block + needed_size - sizeof (struct footer));
     block_footer->size = needed_size;
     block_footer->magic = MAGIC;
@@ -312,7 +318,7 @@ void *kmalloc_ap(uint32_t size, uint8_t align, uint32_t *phys) {
         struct page *p = get_kernel_page((uint32_t)return_addr, 0);
         *phys = (p->frame << 12) | (((uint32_t)return_addr) & 0xFFF);
     }
-    printf("Malloc: %x\n", return_addr);
+    //printf("Malloc: %x\n", return_addr);
     return return_addr;
 }
 
@@ -343,17 +349,17 @@ static struct free_header *get_next_block(struct header *block_head) {
 }
 
 static void do_kfree(void *p) {
-    printf("Free %x\n", p);
+    //printf("Free: %x\n", p);
     if(p == NULL) {
         return;
     }
 
     struct free_header *block_header = (struct free_header *)(((char *)p) - sizeof (struct header));
-    if(block_header->magic != MAGIC) {
-        printf("MAGIC=%x\n", block_header->magic);
+    if(block_header->h.magic != MAGIC) {
+        printf("MAGIC=%x\n", block_header->h.magic);
         PANIC("HEAP CORRUPT HEADER MAGIC INCORRECT.");
     }
-    struct footer *foot = (struct footer *)(((char *)p) + block_header->h.size - sizeof (struct footer));
+    struct footer *foot = (struct footer *)(((char *)block_header) + block_header->h.size - sizeof (struct footer));
     if(foot->magic != MAGIC) {
         printf("MAGIC=%x\n", foot->magic);
         PANIC("HEAP CORRUPT FOOTER MAGIC INCORRECT.");

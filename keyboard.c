@@ -321,6 +321,7 @@ char get_ascii_char() {
             kb_buff_tl = (kb_buff_tl + 1) % BUFFLEN;
             poll_keyboard_input();
             sys_sti();
+            printf("%c", c);
             return c;
         }
         sys_sti();
