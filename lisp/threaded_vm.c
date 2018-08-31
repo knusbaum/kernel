@@ -730,9 +730,9 @@ void vm_eval(context_stack *cs, long variance) {
 //    }
 
     object *o = __pop();
-    printf("Macroexpanded: ");
-    print_object(o);
-    printf("\n");
+//    printf("Macroexpanded: ");
+//    print_object(o);
+//    printf("\n");
     compile_form(cc, cs, o);
     run_vm(cs, cc);
     free_compiled_chunk(cc);
@@ -758,9 +758,9 @@ void vm_read(context_stack *cs, long variance) {
     }
     object *o = next_form(p, cs);
     if(o) {
-        printf("Result: ");
-        print_object(o);
-        printf("\n");
+//        printf("Result: ");
+//        print_object(o);
+//        printf("\n");
         __push(o);
     }
     else {

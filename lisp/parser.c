@@ -165,17 +165,17 @@ object *next_form(parser *p, context_stack *cs) {
             get_next_tok(p);
             o = next_form(p, cs);
             o = new_object_cons(o, obj_nil());
-            printf("Object: ");
-            print_object(o);
-            printf("\n");
+//            printf("Object: ");
+//            print_object(o);
+//            printf("\n");
             return new_object_cons(intern(new_string_copy("COMMA_AT")), o);
         }
         else {
             o = next_form(p, cs);
             o = new_object_cons(o, obj_nil());
-            printf("Object: ");
-            print_object(o);
-            printf("\n");
+//            printf("Object: ");
+//            print_object(o);
+//            printf("\n");
             return new_object_cons(intern(new_string_copy("COMMA")), o);
         }
         break;

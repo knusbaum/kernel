@@ -1,4 +1,4 @@
 (fn fib (n)
-    (if (> x 2)
+    (if (< n 3)
         1
         (+ (fib (- n 1)) (fib (- n 2)))))

@@ -73,10 +73,11 @@ mount_disk: f32.disk
 	sudo mount -rw f32.disk fat32
 
 populate_disk: mount_disk
-	sudo cp *.c *.h fat32
-	sudo cp -R deps fat32/
-	sudo mkdir -p fat32/foo/bar/baz/boo/dep/doo/poo/goo/
-	sudo cp common.h fat32/foo/bar/baz/boo/dep/doo/poo/goo/tood.txt
+	#sudo cp *.c *.h fat32
+	#sudo cp -R deps fat32/
+	#sudo mkdir -p fat32/foo/bar/baz/boo/dep/doo/poo/goo/
+	#sudo cp common.h fat32/foo/bar/baz/boo/dep/doo/poo/goo/tood.txt
+	sudo cp lisp/*.lisp fat32/
 	sleep 1
 	sudo umount fat32
 	-@rm -Rf fat32

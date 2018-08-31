@@ -81,3 +81,8 @@
       (do ((form (eval (read f)) (eval (read f))))
           (nil :done))
       (close f))))
+
+(fn fib (n)
+    (if (< n 3)
+        1
+        (+ (fib (- n 1)) (fib (- n 2)))))
