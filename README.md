@@ -1,7 +1,7 @@
 # KERNEL
 
 This is an x86 kernel with an integrated lisp VM.
-The lisp syntax is my own, but should not be too chalenging.
+The lisp syntax is my own, but should not be too challenging.
 
 Read the makefile to understand how it's built.
 
