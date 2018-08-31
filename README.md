@@ -19,3 +19,18 @@ Then:
 $ make run
 ```
 This requires qemu to be installed on the system.
+
+
+## Notes and disclaimers
+
+About reading files...
+
+As of now, the `load-file` function doesn't work. The lisp vm is able to successfully
+load the `bootstrap.lisp` file from the filesystem, but loading additional lisp files
+currently appears to cause a panic. It's a work in progress.
+
+For now, if you want to load lisp code into the VM, the easiest way is to put it into
+the `lisp/bootstrap.lisp` file and then run `make populate_disk` in order to copy the
+file to the kernel's disk. 
+
+Of course, you can also always enter it in by hand.
