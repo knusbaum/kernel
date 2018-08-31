@@ -6,7 +6,8 @@ The lisp syntax is my own, but should not be too challenging.
 Read the makefile to understand how it's built.
 
 #### Basic build
-You need to be on some sort of *nix to build
+You need to be on some sort of *nix with GCC in order to build.
+Unfortunately, the lisp VM relies on some GCC extensions.
 
 This will ask you for sudo permissions, because it mounts a fat32 volume.
 If you prefer, you can read the `populate_disk` rule and execute the commands yourself.
