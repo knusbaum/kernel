@@ -223,9 +223,9 @@ string *oval_symbol(context_stack *cs, object *o) {
         print_object(o);
         printf("\n");
 //        abort();
-        //vm_error_impl(cs, interns("TYPE-ERROR"));
-        (void)(cs);
-        PANIC("LISP VM GOT TYPE ERROR.");
+        vm_error_impl(cs, interns("TYPE-ERROR"));
+//        (void)(cs);
+//        PANIC("LISP VM GOT TYPE ERROR.");
     }
     return o->str;
 }
@@ -236,9 +236,9 @@ string *oval_keyword(context_stack *cs, object *o) {
         print_object(o);
         printf("\n");
         //abort();
-        //vm_error_impl(cs, interns("TYPE-ERROR"));
-        (void)(cs);
-        PANIC("LISP VM GOT TYPE ERROR.");
+        vm_error_impl(cs, interns("TYPE-ERROR"));
+//        (void)(cs);
+//        PANIC("LISP VM GOT TYPE ERROR.");
     }
     return o->str;
 }
@@ -249,9 +249,9 @@ string *oval_string(context_stack *cs, object *o) {
         print_object(o);
         printf("\n");
         //abort();
-        //vm_error_impl(cs, interns("TYPE-ERROR"));
-        (void)(cs);
-        PANIC("LISP VM GOT TYPE ERROR.");
+        vm_error_impl(cs, interns("TYPE-ERROR"));
+        //(void)(cs);
+        //PANIC("LISP VM GOT TYPE ERROR.");
     }
     return o->str;
 }
@@ -262,9 +262,9 @@ long oval_long(context_stack *cs, object *o) {
         print_object(o);
         printf("\n");
         //abort();
-        //vm_error_impl(cs, interns("TYPE-ERROR"));
-        (void)(cs);
-        PANIC("LISP VM GOT TYPE ERROR.");
+        vm_error_impl(cs, interns("TYPE-ERROR"));
+        //(void)(cs);
+        //PANIC("LISP VM GOT TYPE ERROR.");
     }
     return o->num;
 }
@@ -275,9 +275,9 @@ long oval_stackoffset(context_stack *cs, object *o) {
         print_object(o);
         printf("\n");
         //abort();
-        //vm_error_impl(cs, interns("TYPE-ERROR"));
-        (void)(cs);
-        PANIC("LISP VM GOT TYPE ERROR.");
+        vm_error_impl(cs, interns("TYPE-ERROR"));
+        //(void)(cs);
+        //PANIC("LISP VM GOT TYPE ERROR.");
     }
     return o->num;
 }
@@ -288,9 +288,9 @@ void (*oval_native(context_stack *cs, object *o))(void *, long) {
         print_object(o);
         printf("\n");
         //abort();
-        //vm_error_impl(cs, interns("TYPE-ERROR"));
-        (void)(cs);
-        PANIC("LISP VM GOT TYPE ERROR.");
+        vm_error_impl(cs, interns("TYPE-ERROR"));
+        //(void)(cs);
+        //PANIC("LISP VM GOT TYPE ERROR.");
     }
     return o->native;
 }
@@ -315,9 +315,9 @@ compiled_chunk *oval_fn_compiled(context_stack *cs, object *o) {
         print_object(o);
         printf("\n");
         //abort();
-        //vm_error_impl(cs, interns("TYPE-ERROR"));
-        (void)(cs);
-        PANIC("LISP VM GOT TYPE ERROR.");
+        vm_error_impl(cs, interns("TYPE-ERROR"));
+        //(void)(cs);
+        //PANIC("LISP VM GOT TYPE ERROR.");
     }
     return o->cc;
 }
@@ -343,9 +343,9 @@ object *ocar(context_stack *cs, object *o) {
         print_object(o);
         printf("\n");
         //abort();
-        //vm_error_impl(cs, interns("TYPE-ERROR"));
-        (void)(cs);
-        PANIC("LISP VM GOT TYPE ERROR.");
+        vm_error_impl(cs, interns("TYPE-ERROR"));
+        //(void)(cs);
+        //PANIC("LISP VM GOT TYPE ERROR.");
     }
     return car(o->c);
 }
@@ -359,9 +359,9 @@ object *ocdr(context_stack *cs, object *o) {
         print_object(o);
         printf("\n");
         //abort();
-        //vm_error_impl(cs, interns("TYPE-ERROR"));
-        (void)(cs);
-        PANIC("LISP VM GOT TYPE ERROR.");
+        vm_error_impl(cs, interns("TYPE-ERROR"));
+        //(void)(cs);
+        //PANIC("LISP VM GOT TYPE ERROR.");
     }
     return cdr(o->c);
 }
@@ -372,9 +372,9 @@ object *osetcar(context_stack *cs, object *o, object *car) {
         print_object(o);
         printf("\n");
         //abort();
-        //vm_error_impl(cs, interns("TYPE-ERROR"));
-        (void)(cs);
-        PANIC("LISP VM GOT TYPE ERROR.");
+        vm_error_impl(cs, interns("TYPE-ERROR"));
+        //(void)(cs);
+        //PANIC("LISP VM GOT TYPE ERROR.");
     }
     setcar(o->c, car);
     return car;
@@ -386,9 +386,9 @@ object *osetcdr(context_stack *cs, object *o, object *cdr) {
         print_object(o);
         printf("\n");
         //abort();
-        //vm_error_impl(cs, interns("TYPE-ERROR"));
-        (void)(cs);
-        PANIC("LISP VM GOT TYPE ERROR.");
+        vm_error_impl(cs, interns("TYPE-ERROR"));
+        //(void)(cs);
+        //PANIC("LISP VM GOT TYPE ERROR.");
     }
     setcdr(o->c, cdr);
     return cdr;
@@ -503,10 +503,11 @@ object *new_object_fstream(context_stack *cs, string *fname, char *mode) {
     FILE *f = fopen(string_ptr(fname), mode);
     if(!f) {
         //perror("Couldn't open file: ");
-        //vm_error_impl(cs, interns("FILE-OPEN-ERROR"));
-        (void)(cs);
-        printf("Couldn't open file: %s\n", fname);
-        PANIC("LISP VM GOT FILE-OPEN-ERROR.");
+        printf("Couldn't open file.\n");
+        vm_error_impl(cs, interns("FILE-OPEN-ERROR"));
+//        (void)(cs);
+//        printf("Couldn't open file: %s\n", fname);
+//        PANIC("LISP VM GOT FILE-OPEN-ERROR.");
     }
     fs->fstream = f;
     fs->s.is_open = 1;
@@ -527,9 +528,9 @@ void fstream_close(context_stack *cs, object *o) {
         print_object(o);
         printf("\n");
         //abort();
-        //vm_error_impl(cs, interns("TYPE-ERROR"));
-        (void)(cs);
-        PANIC("LISP VM GOT TYPE ERROR.");
+        vm_error_impl(cs, interns("TYPE-ERROR"));
+        //(void)(cs);
+        //PANIC("LISP VM GOT TYPE ERROR.");
     }
     if(o->fstream->s.is_open) {
         fclose(o->fstream->fstream);
@@ -544,13 +545,13 @@ FILE *fstream_file(context_stack *cs, object *o) {
         print_object(o);
         printf("\n");
         //abort();
-        //vm_error_impl(cs, interns("TYPE-ERROR"));
-        (void)(cs);
-        PANIC("LISP VM GOT TYPE ERROR.");
+        vm_error_impl(cs, interns("TYPE-ERROR"));
+        //(void)(cs);
+        //PANIC("LISP VM GOT TYPE ERROR.");
     }
     if(!o->fstream->fstream) {
-        //vm_error_impl(cs, interns("OPERATION-ON-CLOSED-STREAM-ERROR"));
-        PANIC("LISP VM GOT OPERATION-ON-CLOSED-STREAM-ERROR.");
+        vm_error_impl(cs, interns("OPERATION-ON-CLOSED-STREAM-ERROR"));
+        //PANIC("LISP VM GOT OPERATION-ON-CLOSED-STREAM-ERROR.");
     }
     return o->fstream->fstream;
 }

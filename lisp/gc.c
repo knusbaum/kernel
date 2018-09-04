@@ -43,11 +43,14 @@ object *dequeue_grey_queue() {
     return grey_queue[gq_head++];
 }
 
-void gc_init() {
+context_stack *global_cs;
+
+void gc_init(context_stack *cs) {
     olist = malloc(sizeof (object *) * INIT_STACK);
     o_off = 0;
     o_size = INIT_STACK;
- }
+    global_cs = cs;
+    enable_gc = 0;}
 
 //void *run_gc_loop(void *cs) {
 //    while(1) {
@@ -58,8 +61,13 @@ void gc_init() {
 //    }
 //    return NULL;
 //}
-
-void gc(context_stack *cs) {
+int gci;
+int enable_gc;
+void gc() { //context_stack *cs) {
+    gci++;
+    if((gci % 1000) != 0) return;
+    if(!enable_gc) return;
+    context_stack *cs = global_cs;
     //printf("\nStarting GC\n");
     grey_queue = malloc(sizeof (object *) * INIT_STACK);
     gq_off = 0;
@@ -225,6 +233,9 @@ void gc(context_stack *cs) {
     size_t new_olist_off = 0;
     for(size_t i = 0; i < o_off; i++) {
         if(gc_flag(olist[i]) == GC_FLAG_WHITE) {
+//            printf("Freeing object: ");
+//            print_object(olist[i]);
+//            printf("@%x\n", olist[i]);
             destroy_object(olist[i]);
         }
         else {
@@ -242,6 +253,7 @@ void gc(context_stack *cs) {
     gq_off = 0;
     gq_head = 0;
     gq_size = 0;
+//    printf("Exiting GC.\n");
 }
 
 void add_object_to_gclist(object *o) {

@@ -17,6 +17,7 @@
 #include "kernio.h"
 #include "vesa.h"
 #include "terminal.h"
+#include "setjmp.h"
 
 /* This tutorial will only work for the 32-bit ix86 targets. */
 #if !defined(__i386__)
@@ -33,6 +34,24 @@ extern char _binary_f32_disk_start;
 
 int main(void);
 
+void baz(jmp_buf jb) {
+    printf("Entered baz.\n");
+    if(jb)
+        longjmp(jb, 10);
+    printf("Leaving baz.\n");
+}
+
+void bar(jmp_buf jb) {
+    printf("Entered bar.\n");
+    baz(jb);
+    printf("Leaving bar.\n");
+}
+
+void foo(jmp_buf jb) {
+    printf("Entered foo.\n");
+    bar(jb);
+    printf("Leaving foo.\n");
+}
 
 void kernel_main(struct multiboot_info *mi)
 {
@@ -100,6 +119,18 @@ void kernel_main(struct multiboot_info *mi)
 
     main();
 
+    foo(NULL);
+    
+    jmp_buf jb;
+    int n = setjmp(jb);
+    if(n != 0) {
+        printf("Caught longjmp.\n");
+    }
+    else {
+        foo(jb);
+    }
+    
+    
     printf("LISP VM exited. It is safe to power off.\nSystem is in free-typing mode.\n");
 
     while(1) {

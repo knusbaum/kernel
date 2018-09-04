@@ -109,6 +109,7 @@ size_t fat32_fread(void *ptr, size_t size, size_t nmemb, struct fops *stream) {
 void fat32_clearerr(struct fops *stream) {}
 int fat32_feof(struct fops *stream) {
     struct fat32_fops *fstream = stream;
+    //printf("Fat32_FEOF: fstream->fptr: %x, fstream->file_size: %x\n", fstream->fptr, fstream->file_size);
     return fstream->fptr == fstream->file_size;
 }
 int fat32_ferror(struct fops *stream) {

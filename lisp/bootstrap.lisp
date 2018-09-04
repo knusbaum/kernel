@@ -76,13 +76,10 @@
        ,(car (cdr end-form)))))
 
 (fn load-file (fname)
-  (let ((f (open fname)))
-    (catch ('end-of-file e)
-      (do ((form (eval (read f)) (eval (read f))))
-          (nil :done))
-      (close f))))
-
-(fn fib (n)
-    (if (< n 3)
-        1
-        (+ (fib (- n 1)) (fib (- n 2)))))
+    (let ((f (open fname)))
+      (do ((form (read f) (read f)))
+          ((if form
+               (eval form)
+               t)
+           nil))
+      (close f)))

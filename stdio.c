@@ -39,6 +39,10 @@ void clearerr(FILE *stream) {
 }
 
 int feof(FILE *stream) {
+    //printf("Calling FEOF@%x on stream: %x\n", stream->ops.feof, stream);
+    if(stream == 0xD11BF6) {
+        printf("INSPECT.");
+    }
     return stream->ops.feof(stream);
 }
 
@@ -47,12 +51,16 @@ int ferror(FILE *stream) {
 }
 
 int getc(FILE *stream) {
+//    printf("Reading from stream: %x\n", stream);
+//    printf("stream->ops.feof: %x\nstream->ops.fread: %x\n", stream->ops.feof, stream->ops.fread);
     char c;
     if(feof(stream)) {
+//        printf("Returning EOF.\n");
         return EOF;
     }
+//    printf("Checked FEOF.\n");
     stream->ops.fread(&c, 1, 1, stream);
-//    printf("%c", c);
+//    printf("Returning: %c", c);
     return c;
 }
 

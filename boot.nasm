@@ -27,14 +27,14 @@ _start:
     ;sti
     push ebx
     call kernel_main
-.end
+.end:
 global halt
 halt:
     cli
     hlt
 .Lhang:
     jmp halt
-.end
+.end:
 
 section .text
 global pause

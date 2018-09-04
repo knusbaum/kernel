@@ -9,8 +9,8 @@ LDFLAGS = $(CFLAGS) -nostdlib -lgcc -Wl,--build-id=none -lssp
 ## END CONFIGURABLE ##
 
 ## Gather the necessary assembly files
-ASM_FILES=$(shell ls *.s)
-ASM_OBJ=$(patsubst %.s,%.o,$(ASM_FILES))
+ASM_FILES=$(shell ls *.nasm) 
+ASM_OBJ=$(patsubst %.nasm,%.o,$(ASM_FILES)) realmode.o
 
 ## Gather the necessary C files
 CFILES=$(shell ls *.c)
@@ -57,8 +57,12 @@ gdt_asm.o : gdt_asm.nasm
 idt_asm.o : idt_asm.nasm
 	nasm -f elf idt_asm.nasm -o idt_asm.o
 
-port.o : port.s
-	$(AS) --32 -ggdb port.s -o port.o
+port.o : port.nasm
+	nasm -f elf port.nasm -o port.o
+#	$(AS) --32 -ggdb port.s -o port.o
+
+setjmp.o : setjmp.nasm
+	nasm -f elf setjmp.nasm -o setjmp.o
 
 run-kvm: $(KERNEL_IMG) f32.disk
 	sudo qemu-system-i386 --kernel $(KERNEL_IMG) -drive file=f32.disk,format=raw -m size=4096 --enable-kvm
@@ -86,6 +90,8 @@ lisp_obj:
 	make -C lisp all
 
 $(KERNEL_IMG) : $(OBJECTS) lisp_obj linker.ld
+	echo ASM_FILES $(ASM_FILES)
+	echo ASM_OBJ $(ASM_OBJ)
 	$(CC) $(LDFLAGS) -T linker.ld -o myos.bin $(OBJECTS) $(shell ls lisp/*.o)
 
 ## Realmode uses nasm

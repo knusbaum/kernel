@@ -729,9 +729,6 @@ void vm_set(compiled_chunk *cc, context_stack *cs, object *o) {
 
 static void compile_cons(compiled_chunk *cc, context_stack *cs, object *o) {
     object *func = ocar(cs, o);
-//    printf("compile_cons: ");
-//    print_object(o);
-//    printf("\n");
     if(func == vm_s_quote) {
         bs_push(cc, ocar(cs, ocdr(cs, o)));
     }
@@ -871,9 +868,6 @@ static void compile_cons(compiled_chunk *cc, context_stack *cs, object *o) {
 }
 
 void compile_bytecode(compiled_chunk *cc, context_stack *cs, object *o) {
-//    printf("compile_bytecode: ");
-//    print_object(o);
-//    printf("\n");
     switch(otype(o)) {
     case O_CONS:
         compile_cons(cc, cs, o);
@@ -900,9 +894,6 @@ void compile_bytecode(compiled_chunk *cc, context_stack *cs, object *o) {
 }
 
 compiled_chunk *compile_form(compiled_chunk *cc, context_stack *cs, object *o) {
-    printf("compile_form: ");
-    print_object(o);
-    printf("\n");
     compile_bytecode(cc, cs, o);
     bs_exit(cc);
     return cc;
