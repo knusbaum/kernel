@@ -275,6 +275,19 @@ long oval_long(context_stack *cs, object *o) {
     return o->num;
 }
 
+char oval_char(context_stack *cs, object *o) {
+    if(o->type != O_CHAR) {
+        printf("Expected character, but have: ");
+        print_object(o);
+        printf("\n");
+        //abort();
+        vm_error_impl(cs, interns("TYPE-ERROR"));
+        //(void)(cs);
+        //PANIC("LISP VM GOT TYPE ERROR.");
+    }
+    return o->character;
+}
+
 long oval_stackoffset(context_stack *cs, object *o) {
     if(o->type != O_STACKOFFSET) {
         printf("Expected stackoffset, but have: ");

@@ -102,6 +102,8 @@ void vm_error(context_stack *cs, long variance);
 void vm_open(context_stack *cs, long variance);
 void vm_close(context_stack *cs, long variance);
 void vm_read_char(context_stack *cs, long variance);
+void vm_str_nth(context_stack *cs, long variance);
+void vm_str_len(context_stack *cs, long variance);
 
 parser *stdin_parser;
 
@@ -142,6 +144,8 @@ void vm_init(context_stack *cs) {
     bind_native_fn(cs, interns("OPEN"), vm_open);
     bind_native_fn(cs, interns("CLOSE"), vm_close);
     bind_native_fn(cs, interns("READ-CHAR"), vm_read_char);
+    bind_native_fn(cs, interns("STR-NTH"), vm_str_nth);
+    bind_native_fn(cs, interns("STR-LEN"), vm_str_len);
 
     addrs = get_vm_addrs();
     special_syms = map_create(sym_equal);
@@ -722,6 +726,35 @@ void vm_read_char(context_stack *cs, long variance) {
         vm_error_impl(cs, interns("END-OF-FILE"));
     }
     __push(new_object(O_CHAR, (void *)c));
+}
+
+void vm_str_nth(context_stack *cs, long variance) {
+    if(variance != 2) {
+        printf("Expected exactly 2 arguments, but got %ld.\n", variance);
+        //abort();
+        vm_error_impl(cs, interns("SIG-ERROR"));
+    }
+    object *elem = pop();
+    object *str = pop();
+    string *lstr = oval_string(cs, str);
+    size_t celem = oval_long(cs, elem);
+    if(celem >= string_len(lstr)) {
+        vm_error_impl(cs, interns("ARRAY-OUT-OF-BOUNDS"));
+    }
+    int c = string_ptr(lstr)[celem];
+    __push(new_object(O_CHAR, (void *)c));
+}
+
+void vm_str_len(context_stack *cs, long variance) {
+    if(variance != 1) {
+        printf("Expected exactly 1 argument, but got %ld.\n", variance);
+        //abort();
+        vm_error_impl(cs, interns("SIG-ERROR"));
+    }
+    object *str = pop();
+    string *lstr = oval_string(cs, str);
+    long len = string_len(lstr) - 1;
+    __push(new_object_long(len));
 }
 
 void vm_eval(context_stack *cs, long variance) {

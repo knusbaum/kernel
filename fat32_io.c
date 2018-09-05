@@ -13,10 +13,8 @@ struct fat32_fops {
 };
     
 static inline int entry_for_path(const char *path, struct dir_entry *entry) {
-    printf("populating root dir\n");
     struct directory dir;
     populate_root_dir(master_fs, &dir);
-    printf("done populating root dir\n");
     int found_file = 0;
     if(path[0] != '/') {
         return found_file;
@@ -28,7 +26,6 @@ static inline int entry_for_path(const char *path, struct dir_entry *entry) {
     struct dir_entry *currentry = NULL;
     entry->name = NULL;
     while (next_dir) {
-        printf("next_dir: %s\n", next_dir);
         int found = 0;
         for(int entryi = 0; entryi < dir.num_entries; entryi++) {
             currentry = &dir.entries[entryi];
@@ -117,13 +114,11 @@ int fat32_ferror(struct fops *stream) {
 }
 
 struct fops *fat32_fopen(const char *pathname, const char *mode) {
-    printf("Getting entry for path.\n");
     struct dir_entry entry;
     if(!entry_for_path(pathname, &entry)) {
         //kfree(entry.name);
         return NULL;
     }
-    printf("Got entry for path.\n");
 //    printf("Got entry: %s [%d]\n", entry.name, entry.first_cluster);
     kfree(entry.name);
 

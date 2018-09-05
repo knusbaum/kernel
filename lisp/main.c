@@ -22,9 +22,8 @@ int main(void) {
 
     //bootstrapping the system
     {
-        printf("Opening bootstrap.lisp.\n");
+        printf("Loading bootstrap.lisp.\n");
         FILE *f = fopen("/bootstrap.lisp", "r");
-        printf("Opened bootstrap.lisp.\n");
         if(!f) {
             printf("!!!!!!!!!!\nFailed to bootstrap this lisp. bootstrap.lisp is missing.\nGood luck.\n!!!!!!!!!!\n");
         }

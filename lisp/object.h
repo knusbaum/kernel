@@ -48,6 +48,7 @@ string *oval_symbol(context_stack *cs, object *o);
 string *oval_keyword(context_stack *cs, object *o);
 string *oval_string(context_stack *cs, object *o);
 long oval_long(context_stack *cs, object *o);
+char oval_char(context_stack *cs, object *o);
 long oval_stackoffset(context_stack *cs, object *o);
 void (*oval_native(context_stack *cs, object *o))(void *, long);
 void (*oval_native_unsafe(object *o))(void *, long);
