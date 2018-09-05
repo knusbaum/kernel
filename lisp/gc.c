@@ -67,6 +67,10 @@ void gc() { //context_stack *cs) {
     gci++;
     if((gci % 1000) != 0) return;
     if(!enable_gc) return;
+    force_gc();
+}
+
+void force_gc() {
     context_stack *cs = global_cs;
     //printf("\nStarting GC\n");
     grey_queue = malloc(sizeof (object *) * INIT_STACK);
@@ -159,6 +163,7 @@ void gc() { //context_stack *cs) {
     struct map_pair mp;
     while(grey) {
         switch(otype(grey)) {
+        case O_CHAR:
         case O_SYM:
         case O_STR:
         case O_NUM:

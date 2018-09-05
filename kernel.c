@@ -71,44 +71,13 @@ void kernel_main(struct multiboot_info *mi)
         return;
     }
 
-//    printf("Finding /foo/bar/baz/boo/dep/doo/poo/goo/tood.txt.\n");
-//
-//    FILE *f = fopen("/foo/bar/baz/boo/dep/doo/poo/goo/tood.txt", NULL);
-//    if(f) {
-//        #define BCOUNT 1000
-//        uint8_t c[BCOUNT];
-//        printf("READING:.................................\n");
-//        int count, total;
-//        while((count = fread(&c, BCOUNT, 1, f)), count > 0) {
-//            for(int i = 0; i < count; i++) {
-//                printf("%c", c[i]);
-//            }
-//            total += count;
-//        }
-//        fclose(f);
-//        printf("Read %d bytes.\n", total);
-//    }
-//    else {
-//        printf("File not found. Continuing.\n");
-//    }
-
 //    printf("Starting fat32 console.\n");
-
+//
 //    fat32_console(master_fs);
 //
 //    printf("FAT32 shell exited.\n");
 
     main();
-
-//    jmp_buf jb;
-//    int n = setjmp(jb);
-//    if(n != 0) {
-//        printf("Caught longjmp.\n");
-//    }
-//    else {
-//        foo(jb);
-//    }
-    
     
     printf("LISP VM exited. It is safe to power off.\nSystem is in free-typing mode.\n");
 

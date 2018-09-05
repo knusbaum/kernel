@@ -104,6 +104,7 @@ void vm_close(context_stack *cs, long variance);
 void vm_read_char(context_stack *cs, long variance);
 void vm_str_nth(context_stack *cs, long variance);
 void vm_str_len(context_stack *cs, long variance);
+void vm_gc(context_stack *cs, long variance);
 
 parser *stdin_parser;
 
@@ -146,6 +147,7 @@ void vm_init(context_stack *cs) {
     bind_native_fn(cs, interns("READ-CHAR"), vm_read_char);
     bind_native_fn(cs, interns("STR-NTH"), vm_str_nth);
     bind_native_fn(cs, interns("STR-LEN"), vm_str_len);
+    bind_native_fn(cs, interns("GC"), vm_gc);
 
     addrs = get_vm_addrs();
     special_syms = map_create(sym_equal);
@@ -755,6 +757,16 @@ void vm_str_len(context_stack *cs, long variance) {
     string *lstr = oval_string(cs, str);
     long len = string_len(lstr) - 1;
     __push(new_object_long(len));
+}
+
+void vm_gc(context_stack *cs, long variance) {
+    if(variance != 0) {
+        printf("Expected exactly 0 arguments, but got %ld.\n", variance);
+        //abort();
+        vm_error_impl(cs, interns("SIG-ERROR"));
+    }
+    __push(obj_nil());
+    force_gc();
 }
 
 void vm_eval(context_stack *cs, long variance) {
