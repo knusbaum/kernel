@@ -83,3 +83,29 @@
                t)
            nil))
       (close f)))
+
+(fn load-file2 (fname)
+  (let ((f (open fname)))
+    (catch ('end-of-file e)
+      (do ((form (eval (read f)) (eval (read f))))
+          (nil :done))
+      (close f))))
+
+(fn read-file (fname)
+    (let ((f (open fname)))
+      (catch ('end-of-file e)
+        (do ((form (read f) (read f)))
+            ((progn
+               (print form)
+               (print "\n")
+               nil)
+             :done))
+        (close f))))
+
+(fn read-file-by-char (fname)
+    (let ((f (open fname)))
+      (do ((c (read-char f) (read-char f)))
+          ((progn
+             (print c)
+             nil)
+           :done))))

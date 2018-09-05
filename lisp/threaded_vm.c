@@ -101,6 +101,7 @@ void vm_gensym(context_stack *cs, long variance);
 void vm_error(context_stack *cs, long variance);
 void vm_open(context_stack *cs, long variance);
 void vm_close(context_stack *cs, long variance);
+void vm_read_char(context_stack *cs, long variance);
 
 parser *stdin_parser;
 
@@ -140,7 +141,7 @@ void vm_init(context_stack *cs) {
     bind_native_fn(cs, interns("ERROR"), vm_error);
     bind_native_fn(cs, interns("OPEN"), vm_open);
     bind_native_fn(cs, interns("CLOSE"), vm_close);
-
+    bind_native_fn(cs, interns("READ-CHAR"), vm_read_char);
 
     addrs = get_vm_addrs();
     special_syms = map_create(sym_equal);
@@ -708,6 +709,21 @@ void vm_close(context_stack *cs, long variance) {
     __push(obj_nil());
 }
 
+void vm_read_char(context_stack *cs, long variance) {
+    if(variance != 1) {
+        printf("Expected exactly 1 argument, but got %ld.\n", variance);
+        //abort();
+        vm_error_impl(cs, interns("SIG-ERROR"));
+    }
+    object *o = pop();
+    FILE *f = fstream_file(cs, o);
+    int c = getc(f);
+    if(c == EOF) {
+        vm_error_impl(cs, interns("END-OF-FILE"));
+    }
+    __push(new_object(O_CHAR, (void *)c));
+}
+
 void vm_eval(context_stack *cs, long variance) {
     if(variance != 1) {
         printf("Expected exactly 1 argument, but got %ld.\n", variance);
@@ -890,7 +906,6 @@ push_lex_context:
     NEXTI;
 pop_lex_context:
     //printf("%ld@%p POP_LEX_CONTEXT: %p\n", bs - cc->bs, cc, top_context(cs));
-    //free_context(pop_context(cs));
     pop_context(cs);
     NEXTI;
 go:
@@ -915,8 +930,8 @@ go_if_nil:
 go_if_not_nil:
     target = (size_t)map_get(cc->labels, bs->str);
     //printf("%ld@%p (%p)GO_IF_NOT_NIL (%s)(%ld) ", bs - cc->bs, cc, bs, bs->str, target);
-//    bs->instr = &&go_if_not_nil_optim;
-//    bs->offset = target;
+    bs->instr = &&go_if_not_nil_optim;
+    bs->offset = target;
     if(__pop() != obj_nil()) {
         //printf("(jumping to %p)\n", (cc->bs + target)->instr);
         bs = cc->bs + target;
@@ -931,6 +946,15 @@ go_optim:
 go_if_nil_optim:
     //printf("%ld@%p GO_IF_NIL_OPTIM (%ld) ", bs - cc->bs, cc, bs->offset);
     if(__pop() == obj_nil()) {
+        //printf("(jumping)\n");
+        bs = cc->bs + bs->offset;
+        goto *bs->instr;
+    }
+    //printf("(not jumping)\n");
+    NEXTI;
+go_if_not_nil_optim:
+    //printf("%ld@%p GO_IF_NOT_NIL_OPTIM (%ld) ", bs - cc->bs, cc, bs->offset);
+    if(__pop() != obj_nil()) {
         //printf("(jumping)\n");
         bs = cc->bs + bs->offset;
         goto *bs->instr;
@@ -1008,10 +1032,8 @@ pop_to_stack:
     }
     else {
         stack[s_off - 1 - bs->offset] = __top();
-//        printf("=============================\n");
         //dump_stack();
         __pop();
-//        printf("=============================\n");
         //dump_stack();
     }
     NEXTI;

@@ -187,8 +187,8 @@ object *next_form(parser *p, context_stack *cs) {
         //PANIC("LISP VM SIGNALLED SIG-ERROR AND CANNOT RECOVER.");
         break;
     case END:
-        //vm_error_impl(cs, interns("END-OF-FILE"));
-        //get_next_tok(p);
+        vm_error_impl(cs, interns("END-OF-FILE"));
+        get_next_tok(p);
         //PANIC("LISP VM SIGNALLED SIG-ERROR AND CANNOT RECOVER.");
         break;
     default:

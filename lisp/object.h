@@ -25,7 +25,8 @@ enum obj_type {
     O_FN_COMPILED,
     O_MACRO_COMPILED,
     O_STACKOFFSET,
-    O_FSTREAM
+    O_FSTREAM,
+    O_CHAR
 };
 
 void object_set_name(object *o, char *name);

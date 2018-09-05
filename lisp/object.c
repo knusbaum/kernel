@@ -56,6 +56,7 @@ struct object {
         void (*native)(void *, long);
         compiled_chunk *cc;
         struct file_stream *fstream;
+        char character;
     };
     char *name;
 };
@@ -110,6 +111,9 @@ object *new_object(enum obj_type t, void *o) {
         break;
     case O_FSTREAM:
         ob->fstream = o;
+        break;
+    case O_CHAR:
+        ob->character = (char)o;
         break;
     }
     return ob;
@@ -213,6 +217,8 @@ const char *otype_str(enum obj_type t) {
         return "stack offset";
     case O_FSTREAM:
         return "file stream";
+    case O_CHAR:
+        return "character";
     }
     return "??? corrupt object";
 }
@@ -433,6 +439,9 @@ static void print_cdr(object *o) {
     case O_FSTREAM:
         printf(" . #<FILE STREAM>");
         break;
+    case O_CHAR:
+        printf(" . %c", o->character);
+        break;
     }
 }
 
@@ -492,6 +501,9 @@ void print_object(object *o) {
         break;
     case O_FSTREAM:
         printf("#<FILE STREAM>");
+        break;
+    case O_CHAR:
+        printf("%c", o->character);
         break;
     }
 }
@@ -617,6 +629,7 @@ void destroy_object(object *o) {
     case O_NUM:
     case O_FN_NATIVE:
     case O_STACKOFFSET:
+    case O_CHAR:
         break;
     case O_CONS:
     case O_FN:
