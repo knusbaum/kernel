@@ -121,6 +121,13 @@ string *parse_string(struct lexer *lex) {
     return s;
 }
 
+char parse_character(struct lexer *lex) {
+    match(lex, '\\');
+    char c = look(lex);
+    get_char(lex);
+    return c;
+}
+
 string *parse_symbol(struct lexer *lex) {
     string *s = new_string();
     int c;
@@ -192,6 +199,11 @@ void next_token(struct lexer *lex, struct token *t) {
         t->data = NULL;
         get_char(lex);
         break;
+    case '#':
+        t->type = CHARACTER;
+        get_char(lex); // We can throw away the '#'
+        t->character = parse_character(lex);
+        break;
     case EOF:
         t->type = END;
         t->data = NULL;
@@ -232,6 +244,7 @@ void free_token(struct token *t) {
     case END:
     case NUM:
     case NONE:
+    case CHARACTER:
     case DOT:
         break;
     }
@@ -272,6 +285,9 @@ const char *toktype_str(enum toktype t) {
     case DOT:
         return "DOT";
         break;
+    case CHARACTER:
+        return "CHARACTER";
+        break;
     case END:
         return "END";
         break;
@@ -290,6 +306,7 @@ void print_token(struct token *t) {
     case BACKTICK:
     case COMMA:
     case DOT:
+    case CHARACTER:
     case END:
         printf("%s", toktype_str(t->type));
         break;

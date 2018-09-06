@@ -876,12 +876,9 @@ void compile_bytecode(compiled_chunk *cc, context_stack *cs, object *o) {
         bs_resolve(cc, cs, o);
         break;
     case O_STR:
-        bs_push(cc, o);
-        break;
     case O_NUM:
-        bs_push(cc, o);
-        break;
     case O_KEYWORD:
+    case O_CHAR:
         bs_push(cc, o);
         break;
     default:

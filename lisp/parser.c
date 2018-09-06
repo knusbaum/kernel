@@ -133,6 +133,11 @@ object *next_form(parser *p, context_stack *cs) {
         clear_tok(p);
         return o;
         break;
+    case CHARACTER:
+        o = new_object_char(currtok(p)->character);
+        clear_tok(p);
+        return o;
+        break;
     case KEYWORD:
         o = intern(new_string_copy(string_ptr(currtok(p)->data)));
 //        printf("Object: ");

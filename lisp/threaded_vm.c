@@ -727,7 +727,7 @@ void vm_read_char(context_stack *cs, long variance) {
     if(c == EOF) {
         vm_error_impl(cs, interns("END-OF-FILE"));
     }
-    __push(new_object(O_CHAR, (void *)c));
+    __push(new_object_char(c));
 }
 
 void vm_str_nth(context_stack *cs, long variance) {
@@ -744,7 +744,7 @@ void vm_str_nth(context_stack *cs, long variance) {
         vm_error_impl(cs, interns("ARRAY-OUT-OF-BOUNDS"));
     }
     int c = string_ptr(lstr)[celem];
-    __push(new_object(O_CHAR, (void *)c));
+    __push(new_object_char(c));
 }
 
 void vm_str_len(context_stack *cs, long variance) {

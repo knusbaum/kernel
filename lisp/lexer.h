@@ -16,6 +16,7 @@ enum toktype {
     COMMA,
     AT_SYMBOL,
     DOT,
+    CHARACTER,
     END
 };
 
@@ -24,6 +25,7 @@ struct token {
     union {
         void *data;
         long num;
+        char character;
     };
 };
 

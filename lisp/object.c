@@ -89,11 +89,12 @@ object *new_object(enum obj_type t, void *o) {
     case O_STR:
         ob->str = o;
         break;
+    case O_CHAR:
     case O_STACKOFFSET:
     case O_NUM:
 //        printf("Cannot assign a num with this function.\n");
 //        abort();
-        PANIC("Cannot assign a num with this function.");
+        PANIC("Cannot assign this type of object with this function.");
         break;
     case O_FN:
     case O_MACRO:
@@ -112,9 +113,6 @@ object *new_object(enum obj_type t, void *o) {
     case O_FSTREAM:
         ob->fstream = o;
         break;
-    case O_CHAR:
-        ob->character = (char)o;
-        break;
     }
     return ob;
 }
@@ -132,6 +130,16 @@ object *new_object_long(long l) {
     add_object_to_gclist(ob);
     ob->type = O_NUM;
     ob->num = l;
+    ob->name = NULL;
+    return ob;
+}
+
+object *new_object_char(char c) {
+    object *ob = malloc(sizeof (object));
+    ob->gcflag = GC_FLAG_BLACK;
+    add_object_to_gclist(ob);
+    ob->type = O_CHAR;
+    ob->character = c;
     ob->name = NULL;
     return ob;
 }
@@ -453,7 +461,7 @@ static void print_cdr(object *o) {
         printf(" . #<FILE STREAM>");
         break;
     case O_CHAR:
-        printf(" . %c", o->character);
+        printf(" . #\\%c", o->character);
         break;
     }
 }
@@ -516,7 +524,7 @@ void print_object(object *o) {
         printf("#<FILE STREAM>");
         break;
     case O_CHAR:
-        printf("%c", o->character);
+        printf("#\\%c", o->character);
         break;
     }
 }

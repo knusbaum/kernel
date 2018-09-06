@@ -35,6 +35,7 @@ void object_set_name(object *o, char *name);
 object *new_object(enum obj_type t, void *o);
 object *new_object_cons(object *car, object *cdr);
 object *new_object_long(long l);
+object *new_object_char(char c);
 object *new_object_stackoffset(long l);
 object *new_object_fn(object *args, object *body);
 object *new_object_fn_compiled(compiled_chunk *cc);
