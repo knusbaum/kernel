@@ -1,8 +1,5 @@
 #include "../stdio.h"
 #include "../common.h"
-//#include <stdlib.h>
-//#include <ctype.h>
-//#include <string.h>
 #include "lexer.h"
 #include "lstring.h"
 

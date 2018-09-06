@@ -1,7 +1,5 @@
-//#include <stdlib.h>
 #include "../stdio.h"
 #include "../common.h"
-//#include <string.h>
 #include "context.h"
 #include "map.h"
 

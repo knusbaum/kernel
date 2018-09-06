@@ -1,5 +1,3 @@
-//#include <stdlib.h>
-//#include <string.h>
 #include "../common.h"
 #include "compiler.h"
 #include "threaded_vm.h"

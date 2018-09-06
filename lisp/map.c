@@ -1,7 +1,5 @@
-//#include <stdlib.h>
 #include "../stdio.h"
 #include "../common.h"
-//#include <string.h>
 #include "map.h"
 
 typedef struct map_t {
@@ -104,8 +102,6 @@ map_iterator *map_iterator_next(map_iterator *mi) {
 struct map_pair map_iterator_values(map_iterator *mi) {
     struct map_pair mp;
     if(!mi->map) {
-        //printf("Invalid iterator.\n");
-        //abort();
         PANIC("Invalid iterator.");
     }
     mp.key = mi->map->keys[mi->offset];

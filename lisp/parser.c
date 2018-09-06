@@ -1,4 +1,3 @@
-//#include <stdlib.h>
 #include "../stdio.h"
 #include "../common.h"
 #include "parser.h"
@@ -61,9 +60,7 @@ void tok_match(context_stack *cs, parser *p, enum toktype t) {
         printf("Failed to match toktype %s: got: ", toktype_str(t));
         print_token(currtok(p));
         //abort();
-        //vm_error_impl(cs, interns("SIG-ERROR"));
-        (void)(cs);
-        PANIC("LISP VM SIGNALLED SIG-ERROR AND CANNOT RECOVER.");
+        vm_error_impl(cs, interns("SIG-ERROR"));
     }
     clear_tok(p);
 }
@@ -111,25 +108,16 @@ object *next_form(parser *p, context_stack *cs) {
         break;
     case SYM:
         o = intern(new_string_copy(string_ptr(currtok(p)->data)));
-//        printf("Object: ");
-//        print_object(o);
-//        printf("\n");
         clear_tok(p);
         return o;
         break;
     case STRING:
         o = new_object(O_STR, new_string_copy(string_ptr(currtok(p)->data)));
-//        printf("Object: ");
-//        print_object(o);
-//        printf("\n");
         clear_tok(p);
         return o;
         break;
     case NUM:
         o = new_object_long(currtok(p)->num);
-//        printf("Object: ");
-//        print_object(o);
-//        printf("\n");
         clear_tok(p);
         return o;
         break;
@@ -140,9 +128,6 @@ object *next_form(parser *p, context_stack *cs) {
         break;
     case KEYWORD:
         o = intern(new_string_copy(string_ptr(currtok(p)->data)));
-//        printf("Object: ");
-//        print_object(o);
-//        printf("\n");
         clear_tok(p);
         return o;
         break;
@@ -150,18 +135,12 @@ object *next_form(parser *p, context_stack *cs) {
         get_next_tok(p);
         o = next_form(p, cs);
         o = new_object_cons(o, obj_nil());
-//        printf("Object: ");
-//        print_object(o);
-//        printf("\n");
         return new_object_cons(intern(new_string_copy("QUOTE")), o);
         break;
     case BACKTICK:
         get_next_tok(p);
         o = next_form(p, cs);
         o = new_object_cons(o, obj_nil());
-//        printf("Object: ");
-//        print_object(o);
-//        printf("\n");
         return new_object_cons(intern(new_string_copy("BACKTICK")), o);
         break;
     case COMMA:
@@ -170,17 +149,11 @@ object *next_form(parser *p, context_stack *cs) {
             get_next_tok(p);
             o = next_form(p, cs);
             o = new_object_cons(o, obj_nil());
-//            printf("Object: ");
-//            print_object(o);
-//            printf("\n");
             return new_object_cons(intern(new_string_copy("COMMA_AT")), o);
         }
         else {
             o = next_form(p, cs);
             o = new_object_cons(o, obj_nil());
-//            printf("Object: ");
-//            print_object(o);
-//            printf("\n");
             return new_object_cons(intern(new_string_copy("COMMA")), o);
         }
         break;
@@ -189,12 +162,10 @@ object *next_form(parser *p, context_stack *cs) {
         //abort();
         printf("Found '@' without a comma.\n");
         vm_error_impl(cs, interns("SIG-ERROR"));
-        //PANIC("LISP VM SIGNALLED SIG-ERROR AND CANNOT RECOVER.");
         break;
     case END:
         vm_error_impl(cs, interns("END-OF-FILE"));
         get_next_tok(p);
-        //PANIC("LISP VM SIGNALLED SIG-ERROR AND CANNOT RECOVER.");
         break;
     default:
         //printf("[parser.c][next_form] Got another token: ");

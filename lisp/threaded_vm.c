@@ -104,7 +104,6 @@ void vm_close(context_stack *cs, long variance);
 void vm_read_char(context_stack *cs, long variance);
 void vm_str_nth(context_stack *cs, long variance);
 void vm_str_len(context_stack *cs, long variance);
-void vm_gc(context_stack *cs, long variance);
 
 parser *stdin_parser;
 
@@ -147,7 +146,6 @@ void vm_init(context_stack *cs) {
     bind_native_fn(cs, interns("READ-CHAR"), vm_read_char);
     bind_native_fn(cs, interns("STR-NTH"), vm_str_nth);
     bind_native_fn(cs, interns("STR-LEN"), vm_str_len);
-    bind_native_fn(cs, interns("GC"), vm_gc);
 
     addrs = get_vm_addrs();
     special_syms = map_create(sym_equal);
@@ -518,13 +516,8 @@ void resolve(context_stack *cs) {
     }
 }
 
-char get_ascii_char();
-
 void vm_macroexpand_rec(context_stack *cs, long rec) {
     object *o = __top();
-//    printf("vm_macroexpand_rec (top): ");
-//    print_object(o);
-//    printf("\n");
     if(rec >= 4096) {
         printf("Cannot expand macro. Nesting too deep.\n");
         //abort();
@@ -534,11 +527,7 @@ void vm_macroexpand_rec(context_stack *cs, long rec) {
     if(otype(o) == O_CONS) {
         object *fsym = ocar(cs, o);
         object *func = lookup_fn(cs, fsym);
-//        printf("fsym: ");
-//        print_object(fsym);
-//        printf("\nfunc: ");
-//        print_object(func);
-//        printf("\n");
+
         if(func && otype(func) == O_MACRO_COMPILED) {
             // Don't eval the arguments.
             long num_args = 0;
@@ -560,29 +549,11 @@ void vm_macroexpand_rec(context_stack *cs, long rec) {
                     vm_error_impl(cs, interns("SIG-ERROR"));
                 }
             }
-//            printf("Running function: ");
-//            print_object(func);
-//            printf("\n");
 
             compiled_chunk *func_cc = oval_fn_compiled(cs, func);
-//            map_t *addrs_to_name = map_reverse(addrs);
-//            for(int i = 0; i < func_cc->b_off; i++) {
-//                printf("%d: %x:%s ", i, func_cc->bs[i].instr, (char *)map_get(addrs_to_name, func_cc->bs[i].instr));
-//                if(func_cc->bs[i].has_arg) {
-//                    printf("<");
-//                    print_object(func_cc->bs[i].arg);
-//                    printf(">");
-//                }
-//                printf("\n");
-//                get_ascii_char();
-//            }
-//            map_destroy(addrs_to_name);
             run_vm(cs, func_cc);
 
             object *exp = pop();
-//            printf("Expression: ");
-//            print_object(exp);
-//            printf("\n");
             for(int i = 0; i < num_args; i++) {
                 pop();
             }
@@ -645,12 +616,7 @@ void vm_error(context_stack *cs, long variance) {
     vm_error_impl(cs, sym);
 }
 void vm_error_impl(context_stack *cs, object *sym) {
-//    (void)(cs);
-//    (void)(sym);
-//    printf("Signal: ");
-//    print_object(sym);
-//    PANIC("LISP VM ERROR.");
-//
+
     for(ssize_t i = trap_stack_off - 1; i >= 0; i--) {
 //        printf("Checking trap_stack[%lu].\n", i);
 //        printf("sym: ");
@@ -662,7 +628,6 @@ void vm_error_impl(context_stack *cs, object *sym) {
            || trap_stack[i].catcher == obj_nil()) {
             if(!cs) {
                 printf("Cannot handle error without context_stack.\n");
-                //abort();
                 PANIC("Cannot handle error without context_stack.");
             }
 
@@ -686,7 +651,6 @@ void vm_error_impl(context_stack *cs, object *sym) {
     printf(" FAILED TO CATCH ERROR: ");
     print_object(sym);
     printf(" ABORTING!\n");
-    //abort(); // This has to be an abort. We can't continue.
     PANIC("UNCAUGHT LISP VM EXCEPTION."); // This has to be an abort. We can't continue.
 }
 
@@ -759,16 +723,6 @@ void vm_str_len(context_stack *cs, long variance) {
     __push(new_object_long(len));
 }
 
-void vm_gc(context_stack *cs, long variance) {
-    if(variance != 0) {
-        printf("Expected exactly 0 arguments, but got %ld.\n", variance);
-        //abort();
-        vm_error_impl(cs, interns("SIG-ERROR"));
-    }
-    __push(obj_nil());
-    force_gc();
-}
-
 void vm_eval(context_stack *cs, long variance) {
     if(variance != 1) {
         printf("Expected exactly 1 argument, but got %ld.\n", variance);
@@ -811,9 +765,9 @@ void vm_read(context_stack *cs, long variance) {
         //printf("Read dumping stack: \n");
         //dump_stack();
         object *o = pop();
-//        printf("Creating parser from object: ");
-//        print_object(o);
-//        printf("@%x\n", o);
+        //printf("Creating parser from object: ");
+        //print_object(o);
+        //printf("@%x\n", o);
         p = new_parser_file(fstream_file(cs, o));
     }
     object *o = next_form(p, cs);

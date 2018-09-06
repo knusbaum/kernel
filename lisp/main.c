@@ -1,6 +1,4 @@
 #include "../stdio.h"
-//#include <stdlib.h>
-//#include <pthread.h>
 #include "../setjmp.h"
 #include "../common.h"
 #include "lexer.h"
@@ -16,7 +14,7 @@ extern size_t s_off;
 int main(void) {
 
     context_stack *cs = context_stack_init();
-    gc_init(cs);
+    gc_init();
     vm_init(cs);
     compiler_init();
 
@@ -40,7 +38,6 @@ int main(void) {
                     print_object(pop());
                     printf("\nfailed to load bootstrapping file,\n");
                     dump_stack();
-                    //abort();
                     PANIC("Failed to load lisp bootstrap file.");
                 }
                 run_vm(cs, bootstrap);
@@ -49,10 +46,11 @@ int main(void) {
             }
         }
     }
-    
+
 //    pthread_t gc_thread;
 //    pthread_create(&gc_thread, NULL, run_gc_loop, cs);
     enable_gc = 1;
+
     printf("Starting REPL.\n");
     compiled_chunk *cc = repl(cs);
     while(1) {
@@ -80,7 +78,7 @@ int main(void) {
         run_vm(cs, cc);
         pop_trap();
     }
-    
+
     printf("Shutting down.\n");
     return 0;
 }

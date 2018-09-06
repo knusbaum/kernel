@@ -1,9 +1,5 @@
-//#include <stdlib.h>
 #include "../stdio.h"
 #include "../common.h"
-//#include <string.h>
-//#include <pthread.h>
-//#include <unistd.h>
 #include "gc.h"
 #include "object.h"
 #include "threaded_vm.h"
@@ -43,14 +39,12 @@ object *dequeue_grey_queue() {
     return grey_queue[gq_head++];
 }
 
-context_stack *global_cs;
-
-void gc_init(context_stack *cs) {
+void gc_init() {
     olist = malloc(sizeof (object *) * INIT_STACK);
     o_off = 0;
     o_size = INIT_STACK;
-    global_cs = cs;
-    enable_gc = 0;}
+    enable_gc = 0;
+}
 
 //void *run_gc_loop(void *cs) {
 //    while(1) {
@@ -61,17 +55,13 @@ void gc_init(context_stack *cs) {
 //    }
 //    return NULL;
 //}
+
 int gci;
 int enable_gc;
-void gc() { //context_stack *cs) {
+void gc(context_stack *cs) {
     gci++;
     if((gci % 1000) != 0) return;
     if(!enable_gc) return;
-    force_gc();
-}
-
-void force_gc() {
-    context_stack *cs = global_cs;
     //printf("\nStarting GC\n");
     grey_queue = malloc(sizeof (object *) * INIT_STACK);
     gq_off = 0;
@@ -80,13 +70,13 @@ void force_gc() {
 
     //pthread_mutex_lock(get_gc_mut());
     size_t local_o_off = o_off;
-    
+
     for(size_t i = 0; i < local_o_off; i++) {
         set_gc_flag(olist[i], GC_FLAG_WHITE);
     }
 
     struct sym_val_pair svp;
-    
+
     context_var_iterator *cvi = iterate_vars(cs);
     context_var_iterator *curr_var = cvi;
     while(curr_var) {
@@ -117,7 +107,7 @@ void force_gc() {
         enqueue_grey_queue(stack[i]);
     }
 
-    map_t *interned = get_interned();    
+    map_t *interned = get_interned();
 
     map_iterator *interned_it = iterate_map(interned);
     map_iterator *interned_curr = interned_it;
@@ -131,12 +121,12 @@ void force_gc() {
         }
         if(gc_flag(mp.val) == GC_FLAG_WHITE) {
             set_gc_flag(mp.val, GC_FLAG_BLACK);
-            //enqueue_grey_queue(mp.val); 
+            //enqueue_grey_queue(mp.val);
         }
         interned_curr = map_iterator_next(interned_curr);
     }
     destroy_map_iterator(interned_it);
-    
+
     map_t *internals = get_internals();
     map_iterator *internal_it = iterate_map(internals);
     map_iterator *internal_curr = internal_it;
@@ -227,7 +217,7 @@ void force_gc() {
             }
             break;
         }
-        
+
         set_gc_flag(grey, GC_FLAG_BLACK);
         grey = dequeue_grey_queue();
     }
@@ -247,18 +237,18 @@ void force_gc() {
             new_olist[new_olist_off++] = olist[i];
         }
     }
-    
+
     free(olist);
     olist = new_olist;
     o_off = new_olist_off;
     o_size = new_olist_size;
     //pthread_mutex_unlock(get_gc_mut());
-    
+
     free(grey_queue);
     gq_off = 0;
     gq_head = 0;
     gq_size = 0;
-//    printf("Exiting GC.\n");
+    //printf("Finishing GC.\n");
 }
 
 void add_object_to_gclist(object *o) {
