@@ -75,6 +75,19 @@
           (if (not ,(car end-form)) (go ,loop-body)))
        ,(car (cdr end-form)))))
 
+(defmacro for (init cond step &rest body)
+  (let ((conditional (gensym))
+        (loop-body (gensym)))
+    `(let (,init)
+       (tagbody
+          (go ,conditional)
+          ,loop-body
+          ,@body
+          ,step
+          ,conditional
+          (if ,cond
+              (go ,loop-body))))))
+
 (fn load-file (fname)
     (let ((f (open fname)))
       (do ((form (read f) (read f)))
